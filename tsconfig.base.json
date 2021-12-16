@@ -14,7 +14,10 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "strict": true,
+    "paths": {
+      "@nx-cloud/runners": ["libs/runners/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

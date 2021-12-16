@@ -52,6 +52,40 @@
         }
       },
       "tags": []
+    },
+    "runners": {
+      "root": "libs/runners",
+      "sourceRoot": "libs/runners/src",
+      "projectType": "library",
+      "architect": {
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["libs/runners/**/*.ts"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/runners"],
+          "options": {
+            "jestConfig": "libs/runners/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "builder": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/runners",
+            "tsConfig": "libs/runners/tsconfig.lib.json",
+            "packageJson": "libs/runners/package.json",
+            "main": "libs/runners/src/index.ts",
+            "assets": ["libs/runners/*.md"]
+          }
+        }
+      },
+      "tags": []
     }
   }
 }
