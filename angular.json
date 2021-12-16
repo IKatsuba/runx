@@ -80,7 +80,7 @@
             "outputPath": "dist/libs/runners",
             "tsConfig": "libs/runners/tsconfig.lib.json",
             "packageJson": "libs/runners/package.json",
-            "main": "libs/runners/src/index.ts",
+            "main": "libs/runners/index.ts",
             "assets": ["libs/runners/*.md"]
           }
         }
