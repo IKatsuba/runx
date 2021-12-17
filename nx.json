@@ -16,7 +16,7 @@
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nrwl/workspace/tasks-runners/default",
+      "runner": "./libs/runners/s3",
       "options": {
         "cacheableOperations": [
           "build",

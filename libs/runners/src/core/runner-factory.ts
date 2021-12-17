@@ -10,7 +10,7 @@ import { OPTIONS } from './options';
 import { noopStorageProvider } from './storage';
 import { LifeCycle, noopLifeCycleProvider } from './life-cycle';
 import { CompositeLifeCycle } from '@nrwl/workspace/src/tasks-runner/life-cycle';
-import { loggerProvider } from './logger';
+import { loggerProviders } from './logger';
 
 export function runnerFactory<T extends DefaultTasksRunnerOptions>(
   providers: Provider[]
@@ -25,25 +25,30 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
       nxJson: NxJsonConfiguration;
     }
   ) => {
-    const injector = ReflectiveInjector.resolveAndCreate([
+    const rootInjector = ReflectiveInjector.resolveAndCreate([
       {
         provide: OPTIONS,
         useValue: options,
       },
-      loggerProvider,
+      loggerProviders,
       noopStorageProvider,
       noopLifeCycleProvider,
-      remoteCacheProvider,
-      providers,
     ]);
+
+    const runnerInjector = ReflectiveInjector.resolveAndCreate(
+      [providers, remoteCacheProvider],
+      rootInjector
+    );
 
     return defaultTasksRunner(
       tasks,
       {
         ...options,
-        remoteCache: injector.get(RemoteCache, null),
+        remoteCache: runnerInjector.get(RemoteCache, null),
         lifeCycle: new CompositeLifeCycle(
-          [options.lifeCycle, injector.get(LifeCycle, null)].filter(Boolean)
+          [options.lifeCycle, runnerInjector.get(LifeCycle, null)].filter(
+            Boolean
+          )
         ),
       },
       context
