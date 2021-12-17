@@ -7,6 +7,10 @@ import {
   DefaultTasksRunnerOptions,
 } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
 import { OPTIONS } from './options';
+import { noopStorageProvider } from './storage';
+import { LifeCycle, noopLifeCycleProvider } from './life-cycle';
+import { CompositeLifeCycle } from '@nrwl/workspace/src/tasks-runner/life-cycle';
+import { loggerProvider } from './logger';
 
 export function runnerFactory<T extends DefaultTasksRunnerOptions>(
   providers: Provider[]
@@ -26,6 +30,9 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
         provide: OPTIONS,
         useValue: options,
       },
+      loggerProvider,
+      noopStorageProvider,
+      noopLifeCycleProvider,
       remoteCacheProvider,
       providers,
     ]);
@@ -35,6 +42,9 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
       {
         ...options,
         remoteCache: injector.get(RemoteCache, null),
+        lifeCycle: new CompositeLifeCycle(
+          [options.lifeCycle, injector.get(LifeCycle, null)].filter(Boolean)
+        ),
       },
       context
     );

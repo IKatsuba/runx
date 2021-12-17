@@ -15,10 +15,17 @@ export class NoopStorage implements Storage {
     return Promise.reject(`Failed to retrieve an object ${key}`);
   }
 
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   put(
     fileContent: Buffer | Uint8Array | Blob | string | Readable,
     key: string
   ): Promise<any> {
-    return Promise.resolve(undefined);
+    return Promise.reject(`Failed to store an object ${key}`);
   }
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 }
+
+export const noopStorageProvider = {
+  provide: Storage,
+  useClass: NoopStorage,
+};
