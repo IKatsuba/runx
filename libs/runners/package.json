@@ -1,4 +1,14 @@
 {
   "name": "@nx-cloud/runners",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "dependencies": {
+    "aws-sdk": "^2.1046.0",
+    "injection-js": "^2.4.0",
+    "reflect-metadata": "^0.1.13",
+    "simple-archiver": "^1.0.1"
+  },
+  "peerDependencies": {
+    "@nrwl/devkit": "^13.0.0",
+    "@nrwl/workspace": "^13.0.0"
+  }
 }
