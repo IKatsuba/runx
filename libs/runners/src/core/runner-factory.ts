@@ -11,6 +11,8 @@ import { noopStorageProvider } from './storage';
 import { LifeCycle, noopLifeCycleProvider } from './life-cycle';
 import { CompositeLifeCycle } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 import { loggerProviders } from './logger';
+import { TASKS } from './tasks';
+import { INITIALIZE } from './hooks';
 
 export function runnerFactory<T extends DefaultTasksRunnerOptions>(
   providers: Provider[]
@@ -30,6 +32,10 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
         provide: OPTIONS,
         useValue: options,
       },
+      {
+        provide: TASKS,
+        useValue: tasks,
+      },
       loggerProviders,
       noopStorageProvider,
       noopLifeCycleProvider,
@@ -40,18 +46,20 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
       rootInjector
     );
 
-    return defaultTasksRunner(
-      tasks,
-      {
-        ...options,
-        remoteCache: runnerInjector.get(RemoteCache, null),
-        lifeCycle: new CompositeLifeCycle(
-          [options.lifeCycle, runnerInjector.get(LifeCycle, null)].filter(
-            Boolean
-          )
-        ),
-      },
-      context
-    );
+    return Promise.all(runnerInjector.get(INITIALIZE, [])).then<any>(() => {
+      return defaultTasksRunner(
+        tasks,
+        {
+          ...options,
+          remoteCache: runnerInjector.get(RemoteCache, null),
+          lifeCycle: new CompositeLifeCycle(
+            [options.lifeCycle, runnerInjector.get(LifeCycle, null)].filter(
+              Boolean
+            )
+          ),
+        },
+        context
+      );
+    });
   };
 }

@@ -1,10 +1,25 @@
 {
   "name": "@nx-cloud/runners",
-  "version": "0.0.1",
+  "version": "0.0.0-development",
+  "description": "`@nx-cloud/runners` is a set of runners for Nx projects.",
+  "keywords": [
+    "nx",
+    "nx-cloud",
+    "runners",
+    "s3",
+    "cache"
+  ],
+  "license": "MIT",
+  "repository": {
+    "directory": "libs/runners",
+    "url": "github:IKatsuba/nx-cloud"
+  },
+  "homepage": "https://github.com/IKatsuba/nx-cloud/tree/main/libs/runners",
   "dependencies": {
     "aws-sdk": "^2.1046.0",
     "injection-js": "^2.4.0",
     "reflect-metadata": "^0.1.13",
+    "signale": "^1.4.0",
     "simple-archiver": "^1.0.1"
   },
   "peerDependencies": {
