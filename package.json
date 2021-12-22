@@ -4,9 +4,9 @@
   "license": "MIT",
   "scripts": {
     "nx": "ts-node --project libs/runners/tsconfig.lib.json ./node_modules/.bin/nx",
-    "start": "npm run nx build api --configuration production && node dist/apps/api/main.js",
+    "start": "node dist/apps/api/main.js",
     "serve": "npm run nx serve api",
-    "build": "npm run nx build",
+    "build": "npm run nx build api --configuration production",
     "build:runners": "http_proxy=http://localhost:8888 DEBUG=true npm run nx build api",
     "test": "nppm run nx test"
   },
