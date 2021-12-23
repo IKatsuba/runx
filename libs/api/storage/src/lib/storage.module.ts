@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { FileStorage } from './file-storage';
 import { ConfigService } from '@nestjs/config';
-import { Environment } from '@nx-cloud/api/env';
+import {
+  Environment,
+  FirebaseStorageConfig,
+  S3StorageConfig,
+} from '@nx-cloud/api/env';
 import { FirebaseStorageService } from '../firebase/firebase-storage.service';
-import { FirebaseStorageConfig } from '../firebase/firebase-storage-config.token';
 import { S3StorageService } from '../s3/s3-storage.service';
-import { S3StorageConfig } from '../s3/s3-storage-config.token';
 
 @Module({
   imports: [],

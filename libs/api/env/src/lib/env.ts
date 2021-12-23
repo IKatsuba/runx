@@ -1,4 +1,5 @@
-import { FirebaseStorageConfig, S3StorageConfig } from '@nx-cloud/api/storage';
+import { S3StorageConfig } from './s3-storage-config';
+import { FirebaseStorageConfig } from './firebase-storage-config';
 
 export enum StorageProvider {
   Firebase = 'firebase',
