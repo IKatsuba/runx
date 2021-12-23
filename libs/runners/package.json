@@ -24,8 +24,8 @@
     "simple-archiver": "^1.0.1"
   },
   "peerDependencies": {
-    "@nrwl/devkit": "^13.0.0",
-    "@nrwl/workspace": "^13.0.0"
+    "@nrwl/devkit": "^13.3.0",
+    "@nrwl/workspace": "^13.3.0"
   },
   "publishConfig": {
     "access": "public"
