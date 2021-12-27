@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CYPRESS_INSTALL_BINARY: 0
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js 14.x
@@ -23,6 +26,3 @@ jobs:
         run: |
           npm run build:all
           npm run release
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}

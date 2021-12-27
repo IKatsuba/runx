@@ -5,11 +5,13 @@ on:
     branches:
       - main
 
+env:
+  CYPRESS_INSTALL_BINARY: 0
+  FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      CYPRESS_INSTALL_BINARY: 0
     steps:
       - uses: actions/checkout@v1
       - name: Use Node.js 14.x
