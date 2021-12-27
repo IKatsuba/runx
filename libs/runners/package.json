@@ -20,6 +20,7 @@
     "axios": "^0.24.0",
     "injection-js": "^2.4.0",
     "reflect-metadata": "^0.1.13",
+    "firebase-admin": "^10.0.1",
     "signale": "^1.4.0",
     "simple-archiver": "^1.0.1"
   },

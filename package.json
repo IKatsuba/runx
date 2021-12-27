@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run nx build api --configuration production",
     "build:all": "npm run nx -- run-many --target build --configuration production --all",
-    "build:runners": "http_proxy=http://localhost:8888 DEBUG=true npm run nx build api",
+    "build:runners": "DEBUG=true npm run nx build api",
     "nx": "ts-node --project libs/runners/tsconfig.lib.json ./node_modules/.bin/nx",
     "release": "semantic-release",
     "serve": "npm run nx serve api",
