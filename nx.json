@@ -1,7 +1,7 @@
 {
   "npmScope": "nx-cloud",
   "affected": {
-    "defaultBase": "main"
+    "defaultBase": "origin/main"
   },
   "cli": {
     "defaultCollection": "@nrwl/angular",
@@ -16,7 +16,7 @@
   },
   "tasksRunnerOptions": {
     "default": {
-      "runner": "./libs/runners/cloud",
+      "runner": "./libs/runners/firebase",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }
