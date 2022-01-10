@@ -1,3 +1,5 @@
-export interface FirebaseStorageConfig extends Record<string, string> {
-  bucket: string;
+import { AppOptions, ServiceAccount } from 'firebase-admin';
+
+export interface FirebaseStorageConfig extends Omit<AppOptions, 'credential'> {
+  credential: ServiceAccount;
 }
