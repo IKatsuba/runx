@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@nx-cloud/api/cache';
+import { CacheModule } from '@nx-cloud/api/http/cache';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
-import { loadConfig } from '@nx-cloud/api/env';
+import { parseConfig } from '@nx-cloud/api/env';
 
 @Module({
   imports: [
@@ -10,8 +10,8 @@ import { loadConfig } from '@nx-cloud/api/env';
       isGlobal: true,
       load: [
         () => environment,
-        registerAs('firebase', () => loadConfig(process.env.FIREBASE_CONFIG)),
-        registerAs('s3', () => loadConfig(process.env.S3_CONFIG)),
+        registerAs('firebase', () => parseConfig(process.env.FIREBASE_CONFIG)),
+        registerAs('s3', () => parseConfig(process.env.S3_CONFIG)),
       ],
     }),
     CacheModule,

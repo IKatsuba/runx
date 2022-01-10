@@ -33,6 +33,7 @@ jobs:
       - name: Lint
         run: |
           npm ci
+          npm run nx workspace-lint
           npm run nx affected:lint
   test:
     runs-on: ubuntu-latest

@@ -9,11 +9,11 @@ export class FirebaseStorageService extends FileStorage {
   constructor(private config: FirebaseStorageConfig) {
     super();
 
-    const { bucket, ...firebaseConfig } = config;
+    const { credential, ...firebaseConfig } = config;
 
     this.app = firebase.initializeApp({
-      credential: firebase.credential.cert(firebaseConfig),
-      storageBucket: bucket,
+      ...firebaseConfig,
+      credential: firebase.credential.cert(credential),
     });
   }
 
