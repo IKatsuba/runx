@@ -1,14 +1,10 @@
-# Open Source Nx Cloud
+# RunX
 
-> This project is not an official [Nx Cloud](https://nx.app) service. It is an open-source alternative.
-
-## Attention: WIP
-
-It is a pre-alpha version of the service. Please, do not use it until the official release.
+> **Attention: WIP!** It is a pre-alpha version of the service. Please, do not use it until the official release.
 
 ## What is it?
 
-This project is trying to implement all official Nx Cloud service features.
+RunX is an open-source implementation of the Nx Cloud service
 
 ## Why is this project useful?
 
