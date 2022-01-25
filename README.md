@@ -20,4 +20,4 @@ It is fully free.
 
 ## Q&A
 
-[Discutions](https://github.com/IKatsuba/nx-cloud/discussions/categories/q-a)
+[Discutions](https://github.com/IKatsuba/runx/discussions/categories/q-a)

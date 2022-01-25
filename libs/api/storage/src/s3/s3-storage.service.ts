@@ -1,6 +1,6 @@
 import { FileStorage } from '../lib/file-storage';
 import { defer, Observable } from 'rxjs';
-import { S3StorageConfig } from '@nx-cloud/api/env';
+import { S3StorageConfig } from '@runx/api/env';
 import { switchMap } from 'rxjs/operators';
 import * as AWS from 'aws-sdk';
 

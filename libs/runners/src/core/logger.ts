@@ -50,7 +50,7 @@ export const loggerProvider = {
   provide: Logger,
   useFactory: (logLevel: string) =>
     new Signale<DefaultMethods | 'wait'>({
-      scope: 'nx cloud runner',
+      scope: 'runx/nx-runners',
       logLevel,
     }),
   deps: [LOG_LEVEL],

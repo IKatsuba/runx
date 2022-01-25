@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CacheController } from './cache.controller';
-import { FileStorage } from '@nx-cloud/api/storage';
+import { FileStorage } from '@runx/api/storage';
 import { Observable, of } from 'rxjs';
 
 class MockFileStorage extends FileStorage {

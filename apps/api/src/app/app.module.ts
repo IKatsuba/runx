@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@nx-cloud/api/http/cache';
+import { CacheModule } from '@runx/api/http/cache';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
-import { parseConfig } from '@nx-cloud/api/env';
-import { DbModule } from '@nx-cloud/api/db';
+import { parseConfig } from '@runx/api/env';
+import { DbModule } from '@runx/api/db';
 
 @Module({
   imports: [

@@ -14,7 +14,7 @@ export const s3CachingRunner = runnerFactory<S3CachingRunnerOptions>([
   storageProvider,
   {
     provide: Logger,
-    useFactory: (logger: Logger) => logger.scope('nx cloud runner', 's3'),
+    useFactory: (logger: Logger) => logger.scope('runx/nx-runners', 's3'),
     deps: [[new SkipSelf(), Logger]],
   },
 ]);

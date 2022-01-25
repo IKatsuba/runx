@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheController } from './cache.controller';
-import { StorageModule } from '@nx-cloud/api/storage';
+import { StorageModule } from '@runx/api/storage';
 
 @Module({
   controllers: [CacheController],
