@@ -16,6 +16,12 @@
   },
   "tasksRunnerOptions": {
     "default": {
+      "runner": "@nrwl/workspace/tasks-runners/default",
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
+    },
+    "firebase": {
       "runner": "./libs/runners/firebase",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
@@ -38,7 +44,6 @@
       "e2eTestRunner": "cypress"
     },
     "@nrwl/angular:library": {
-      "style": "less",
       "linter": "eslint",
       "unitTestRunner": "jest"
     },
