@@ -3,6 +3,7 @@ import { CacheModule } from '@nx-cloud/api/http/cache';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
 import { parseConfig } from '@nx-cloud/api/env';
+import { DbModule } from '@nx-cloud/api/db';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { parseConfig } from '@nx-cloud/api/env';
       ],
     }),
     CacheModule,
+    DbModule,
   ],
 })
 export class AppModule {}

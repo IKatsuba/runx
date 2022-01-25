@@ -17,6 +17,7 @@
     "esModuleInterop": true,
     "strict": false,
     "paths": {
+      "@nx-cloud/api/db": ["libs/api/db/src/index.ts"],
       "@nx-cloud/api/env": ["libs/api/env/src/index.ts"],
       "@nx-cloud/api/http/cache": ["libs/api/http/cache/src/index.ts"],
       "@nx-cloud/api/storage": ["libs/api/storage/src/index.ts"],
