@@ -1,6 +1,6 @@
 import { FileStorage } from '../lib/file-storage';
 import { defer, map, Observable } from 'rxjs';
-import { FirebaseStorageConfig } from '@nx-cloud/api/env';
+import { FirebaseStorageConfig } from '@runx/api/env';
 import firebase from 'firebase-admin';
 
 export class FirebaseStorageService extends FileStorage {

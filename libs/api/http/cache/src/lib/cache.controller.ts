@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { FileStorage } from '@nx-cloud/api/storage';
+import { FileStorage } from '@runx/api/storage';
 import { combineLatest, forkJoin, Observable } from 'rxjs';
 
 @Controller('cache')

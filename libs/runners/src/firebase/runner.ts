@@ -17,7 +17,7 @@ export const firebaseCachingRunner =
     {
       provide: Logger,
       useFactory: (logger: Logger) =>
-        logger.scope('nx cloud runner', 'firebase'),
+        logger.scope('runx/nx-runners', 'firebase'),
       deps: [[new SkipSelf(), Logger]],
     },
   ]);

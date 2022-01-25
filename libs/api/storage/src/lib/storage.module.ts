@@ -5,7 +5,7 @@ import {
   Environment,
   FirebaseStorageConfig,
   S3StorageConfig,
-} from '@nx-cloud/api/env';
+} from '@runx/api/env';
 import { FirebaseStorageService } from '../firebase/firebase-storage.service';
 import { S3StorageService } from '../s3/s3-storage.service';
 

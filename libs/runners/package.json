@@ -1,10 +1,11 @@
 {
-  "name": "@nx-cloud/runners",
+  "name": "@runx/nx-runners",
   "version": "0.0.0-development",
-  "description": "`@nx-cloud/runners` is a set of runners for Nx projects.",
+  "description": "`@runx/nx-runners` is a set of runners for Nx projects.",
   "keywords": [
     "nx",
     "nx-cloud",
+    "runx",
     "runners",
     "s3",
     "cache"
@@ -12,9 +13,9 @@
   "license": "MIT",
   "repository": {
     "directory": "libs/runners",
-    "url": "github:IKatsuba/nx-cloud"
+    "url": "github:IKatsuba/runx"
   },
-  "homepage": "https://github.com/IKatsuba/nx-cloud/tree/main/libs/runners",
+  "homepage": "https://github.com/IKatsuba/runx/tree/main/libs/runners",
   "dependencies": {
     "aws-sdk": "^2.1046.0",
     "axios": "^0.24.0",

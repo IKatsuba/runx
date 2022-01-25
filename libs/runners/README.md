@@ -1,12 +1,12 @@
-# `@nx-cloud/runners`
+# `@runx/nx-runners`
 
 > **Attention is required!** This project is not an official [Nx Cloud](https://nx.app) service. This is an open-source alternative.
 
-`@nx-cloud/runners` is a set of runners for Nx projects.
+`@runx/nx-runners` is a set of runners for Nx projects.
 
-Now available 1 runner for caching build artifacts with S3 `@nx-cloud/runners/s3`
+Now available 1 runner for caching build artifacts with S3 `@runx/nx-runners/s3`
 
-## `@nx-cloud/runners/s3`
+## `@runx/nx-runners/s3`
 
 ### Configuring the S3 runner
 
@@ -16,7 +16,7 @@ The runner is configured in `nx.json`. Available all options of default runner c
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nx-cloud/runners/s3",
+      "runner": "@runx/nx-runners/s3",
       "options": {
         "cacheableOperations": [
           "build",
@@ -36,7 +36,7 @@ Connection is configured using the `s3` option
 {
   "tasksRunnerOptions": {
     "default": {
-      "runner": "@nx-cloud/runners/s3",
+      "runner": "@runx/nx-runners/s3",
       "options": {
         "cacheableOperations": [
           "build",

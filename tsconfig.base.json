@@ -17,11 +17,11 @@
     "esModuleInterop": true,
     "strict": false,
     "paths": {
-      "@nx-cloud/api/db": ["libs/api/db/src/index.ts"],
-      "@nx-cloud/api/env": ["libs/api/env/src/index.ts"],
-      "@nx-cloud/api/http/cache": ["libs/api/http/cache/src/index.ts"],
-      "@nx-cloud/api/storage": ["libs/api/storage/src/index.ts"],
-      "@nx-cloud/runners": ["libs/runners/src/index.ts"]
+      "@runx/api/db": ["libs/api/db/src/index.ts"],
+      "@runx/api/env": ["libs/api/env/src/index.ts"],
+      "@runx/api/http/cache": ["libs/api/http/cache/src/index.ts"],
+      "@runx/api/storage": ["libs/api/storage/src/index.ts"],
+      "@runx/runners": ["libs/runners/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

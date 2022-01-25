@@ -1,4 +1,4 @@
-import { Environment, StorageProvider } from '@nx-cloud/api/env';
+import { Environment, StorageProvider } from '@runx/api/env';
 
 export const environment: Environment = {
   production: true,
