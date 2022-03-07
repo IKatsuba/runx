@@ -26,6 +26,12 @@
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }
+    },
+    "s3": {
+      "runner": "./libs/runners/s3",
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
     }
   },
   "targetDependencies": {
