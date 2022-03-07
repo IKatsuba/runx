@@ -21,7 +21,7 @@
       "@runx/api/env": ["libs/api/env/src/index.ts"],
       "@runx/api/http/cache": ["libs/api/http/cache/src/index.ts"],
       "@runx/api/storage": ["libs/api/storage/src/index.ts"],
-      "@runx/runners": ["libs/runners/src/index.ts"]
+      "@runx/nx-runners": ["libs/nx-runners/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

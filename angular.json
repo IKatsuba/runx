@@ -145,23 +145,23 @@
       },
       "tags": []
     },
-    "runners": {
-      "root": "libs/runners",
-      "sourceRoot": "libs/runners/src",
+    "nx-runners": {
+      "root": "libs/nx-runners",
+      "sourceRoot": "libs/nx-runners/src",
       "projectType": "library",
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": ["libs/runners/**/*.ts"]
+            "lintFilePatterns": ["libs/nx-runners/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/runners"],
+          "outputs": ["coverage/libs/nx-runners"],
           "options": {
-            "jestConfig": "libs/runners/jest.config.js",
+            "jestConfig": "libs/nx-runners/jest.config.js",
             "passWithNoTests": true
           }
         },
@@ -169,11 +169,11 @@
           "builder": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/libs/runners",
-            "tsConfig": "libs/runners/tsconfig.lib.json",
-            "packageJson": "libs/runners/package.json",
-            "main": "libs/runners/index.ts",
-            "assets": ["libs/runners/*.md"]
+            "outputPath": "dist/libs/nx-runners",
+            "tsConfig": "libs/nx-runners/tsconfig.lib.json",
+            "packageJson": "libs/nx-runners/package.json",
+            "main": "libs/nx-runners/index.ts",
+            "assets": ["libs/nx-runners/*.md"]
           }
         }
       },
