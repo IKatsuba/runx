@@ -61,7 +61,7 @@
     "@typescript-eslint/eslint-plugin": "5.10.2",
     "@typescript-eslint/parser": "5.10.2",
     "aws-sdk": "^2.1073.0",
-    "axios": "^0.25.0",
+    "axios": "0.26.0",
     "cypress": "^8.3.0",
     "eslint": "8.7.0",
     "eslint-config-prettier": "8.1.0",

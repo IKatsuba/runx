@@ -3,7 +3,7 @@ import {
   TaskResult,
 } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 import { Task } from '@nrwl/devkit';
-import { TaskCacheStatus } from '@nrwl/workspace/src/utilities/output';
+import { TaskStatus } from '@nrwl/workspace/src/tasks-runner/tasks-runner';
 
 export abstract class LifeCycle implements ILifeCycle {
   abstract startCommand(): void;
@@ -18,7 +18,7 @@ export abstract class LifeCycle implements ILifeCycle {
 
   abstract printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    cacheStatus: TaskStatus,
     output: string
   ): void;
 }
@@ -31,7 +31,7 @@ export class NoopLifeCycle extends LifeCycle {
 
   printTaskTerminalOutput(
     task: Task,
-    cacheStatus: TaskCacheStatus,
+    cacheStatus: TaskStatus,
     output: string
   ): void {}
 
