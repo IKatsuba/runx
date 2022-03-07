@@ -12,10 +12,10 @@
   ],
   "license": "MIT",
   "repository": {
-    "directory": "libs/runners",
+    "directory": "libs/nx-runners",
     "url": "github:IKatsuba/runx"
   },
-  "homepage": "https://github.com/IKatsuba/runx/tree/main/libs/runners",
+  "homepage": "https://github.com/IKatsuba/runx/tree/main/libs/nx-runners",
   "dependencies": {
     "aws-sdk": "^2.1046.0",
     "axios": "0.26.0",
