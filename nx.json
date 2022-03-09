@@ -32,6 +32,12 @@
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
       }
+    },
+    "cloud": {
+      "runner": "./libs/nx-runners/cloud",
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
     }
   },
   "targetDependencies": {

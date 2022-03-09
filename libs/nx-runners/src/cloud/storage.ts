@@ -1,16 +1,11 @@
 import { NoopStorage, Storage } from '../core/storage';
-import { OPTIONS } from '../core/options';
 import { Readable } from 'stream';
-import { CloudRunnerOptions } from './runner';
-import axios, { AxiosInstance } from 'axios';
+import axios, { Axios } from 'axios';
+import { Optional } from 'injection-js';
 
 export class CloudStorage extends Storage {
-  private api: AxiosInstance;
-
-  constructor(apiUrl: string) {
+  constructor(private api: Axios) {
     super();
-
-    this.api = axios.create({ baseURL: apiUrl });
   }
 
   async get(
@@ -49,7 +44,6 @@ export class CloudStorage extends Storage {
 
 export const storageProvider = {
   provide: Storage,
-  useFactory: (options: CloudRunnerOptions) =>
-    options?.apiUrl ? new CloudStorage(options.apiUrl) : new NoopStorage(),
-  deps: [OPTIONS],
+  useFactory: (api: Axios) => (api ? new CloudStorage(api) : new NoopStorage()),
+  deps: [[new Optional(), Axios]],
 };

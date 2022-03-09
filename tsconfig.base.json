@@ -20,8 +20,10 @@
       "@runx/api/db": ["libs/api/db/src/index.ts"],
       "@runx/api/env": ["libs/api/env/src/index.ts"],
       "@runx/api/http/cache": ["libs/api/http/cache/src/index.ts"],
+      "@runx/api/http/task": ["libs/api/http/task/src/index.ts"],
       "@runx/api/storage": ["libs/api/storage/src/index.ts"],
-      "@runx/nx-runners": ["libs/nx-runners/src/index.ts"]
+      "@runx/cli": ["libs/cli/src/index.ts"],
+      "@runx/nx-runners/*": ["libs/nx-runners/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

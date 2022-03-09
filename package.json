@@ -9,9 +9,10 @@
     "build:runners": "DEBUG=true npm run nx -- build api",
     "nx": "ts-node --project libs/nx-runners/tsconfig.lib.json ./node_modules/.bin/nx",
     "release": "semantic-release",
-    "serve": "npm run nx -- serve api",
+    "serve:api": "npm run nx -- serve api",
     "start": "node dist/apps/api/main.js",
-    "test": "npm run nx -- test"
+    "test": "npm run nx -- test",
+    "dev": "NX_CLOUD_API_URL=http://localhost:3333 npm run nx -- build cli --runner cloud"
   },
   "dependencies": {
     "@angular/animations": "13.2.5",
@@ -55,6 +56,9 @@
     "@nrwl/node": "13.8.4",
     "@nrwl/tao": "13.8.4",
     "@nrwl/workspace": "13.8.4",
+    "@oclif/core": "^1.5.2",
+    "@oclif/plugin-help": "^5.1.11",
+    "@oclif/plugin-plugins": "^2.1.0",
     "@types/jest": "27.0.2",
     "@types/node": "16.11.22",
     "@types/signale": "^1.4.2",
