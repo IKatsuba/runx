@@ -4,6 +4,7 @@ import { Injectable } from 'injection-js';
 import { CloudTask, CloudTaskStatus } from './cloud-task';
 import { OPTIONS } from '../core/options';
 import { CloudRunnerOptions } from './runner-factory';
+import { ApiHttpJob } from '../core/job';
 
 export const axiosProvider = {
   provide: Axios,
@@ -16,19 +17,15 @@ export const axiosProvider = {
 export class Api {
   constructor(private axios: Axios | null) {}
 
-  async createCloudTask(tasks: Task[]): Promise<string> {
-    const {
-      data: { id },
-    } = await this.axios.post<{ id: string }>(`/task`, tasks);
+  async createJob(job: Omit<ApiHttpJob, 'id' | 'status'>): Promise<ApiHttpJob> {
+    const { data } = await this.axios.post<ApiHttpJob>(`/job`, job);
 
-    return id;
+    return data;
   }
 
-  async getTaskStatus(id: string): Promise<CloudTaskStatus> {
-    const {
-      data: { status },
-    } = await this.axios.get<CloudTask>(`/task/${id}`);
+  async getJob(id: string): Promise<ApiHttpJob> {
+    const { data: job } = await this.axios.get<ApiHttpJob>(`/job/${id}`);
 
-    return status;
+    return job;
   }
 }

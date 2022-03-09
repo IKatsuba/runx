@@ -7,7 +7,8 @@ import {
 } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
 import { CompositeLifeCycle } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 import { Task } from '@nrwl/devkit';
-import { CONTEXT, Context } from './context';
+import { CONTEXT } from './context';
+import { Context } from './job';
 import { TASKS } from './tasks';
 import { OPTIONS } from './options';
 

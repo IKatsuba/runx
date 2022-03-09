@@ -10,7 +10,8 @@ import { loggerProviders } from './logger';
 import { TASKS } from './tasks';
 import { INITIALIZE } from './hooks';
 import { defaultTaskRunnerProvider, TASK_RUNNER } from './task-runner';
-import { CONTEXT, Context } from './context';
+import { CONTEXT } from './context';
+import { Context } from './job';
 
 export function runnerFactory<T extends DefaultTasksRunnerOptions>(
   providers: Provider[]

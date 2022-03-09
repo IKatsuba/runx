@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Task } from '@nrwl/devkit';
 
 @Controller('task')
-export class TaskController {
+export class JobController {
   @Post()
   createTask(@Body() payload: Task[]) {
     console.log(payload);

@@ -8,16 +8,12 @@
       "architect": {
         "build": {
           "builder": "@nrwl/node:webpack",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/apps/api",
             "main": "apps/api/src/main.ts",
             "tsConfig": "apps/api/tsconfig.app.json",
-            "assets": [
-              "apps/api/src/assets"
-            ]
+            "assets": ["apps/api/src/assets"]
           },
           "configurations": {
             "production": {
@@ -41,20 +37,14 @@
         },
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "apps/api/**/*.ts"
-            ]
+            "lintFilePatterns": ["apps/api/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/apps/api"
-          ],
+          "outputs": ["coverage/apps/api"],
           "options": {
             "jestConfig": "apps/api/jest.config.js",
             "passWithNoTests": true
@@ -70,20 +60,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/api/db/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/api/db/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/api/db"
-          ],
+          "outputs": ["coverage/libs/api/db"],
           "options": {
             "jestConfig": "libs/api/db/jest.config.js",
             "passWithNoTests": true
@@ -99,20 +83,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/api/env/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/api/env/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/api/env"
-          ],
+          "outputs": ["coverage/libs/api/env"],
           "options": {
             "jestConfig": "libs/api/env/jest.config.js",
             "passWithNoTests": true
@@ -128,20 +106,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/api/http/cache/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/api/http/cache/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/api/http/cache"
-          ],
+          "outputs": ["coverage/libs/api/http/cache"],
           "options": {
             "jestConfig": "libs/api/http/cache/jest.config.js",
             "passWithNoTests": true
@@ -150,29 +122,23 @@
       },
       "tags": []
     },
-    "api-http-task": {
-      "root": "libs/api/http/task",
-      "sourceRoot": "libs/api/http/task/src",
+    "api-http-job": {
+      "root": "libs/api/http/job",
+      "sourceRoot": "libs/api/http/job/src",
       "projectType": "library",
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/api/http/task/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/api/http/job/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/api/http/task"
-          ],
+          "outputs": ["coverage/libs/api/http/job"],
           "options": {
-            "jestConfig": "libs/api/http/task/jest.config.js",
+            "jestConfig": "libs/api/http/job/jest.config.js",
             "passWithNoTests": true
           }
         }
@@ -186,20 +152,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/api/storage/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/api/storage/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/api/storage"
-          ],
+          "outputs": ["coverage/libs/api/storage"],
           "options": {
             "jestConfig": "libs/api/storage/jest.config.js",
             "passWithNoTests": true
@@ -215,20 +175,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/cli/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/cli/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/cli"
-          ],
+          "outputs": ["coverage/libs/cli"],
           "options": {
             "jestConfig": "libs/cli/jest.config.js",
             "passWithNoTests": true
@@ -236,18 +190,13 @@
         },
         "build": {
           "builder": "@nrwl/js:tsc",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/cli",
             "tsConfig": "libs/cli/tsconfig.lib.json",
             "packageJson": "libs/cli/package.json",
             "main": "libs/cli/src/index.ts",
-            "assets": [
-              "libs/cli/*.md",
-              "libs/cli/bin/**"
-            ]
+            "assets": ["libs/cli/*.md", "libs/cli/bin/**"]
           }
         }
       },
@@ -260,20 +209,14 @@
       "architect": {
         "lint": {
           "builder": "@nrwl/linter:eslint",
-          "outputs": [
-            "{options.outputFile}"
-          ],
+          "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": [
-              "libs/nx-runners/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/nx-runners/**/*.ts"]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/nx-runners"
-          ],
+          "outputs": ["coverage/libs/nx-runners"],
           "options": {
             "jestConfig": "libs/nx-runners/jest.config.js",
             "passWithNoTests": true
@@ -281,17 +224,13 @@
         },
         "build": {
           "builder": "@nrwl/js:tsc",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/nx-runners",
             "tsConfig": "libs/nx-runners/tsconfig.lib.json",
             "packageJson": "libs/nx-runners/package.json",
             "main": "libs/nx-runners/index.ts",
-            "assets": [
-              "libs/nx-runners/*.md"
-            ]
+            "assets": ["libs/nx-runners/*.md"]
           }
         }
       },

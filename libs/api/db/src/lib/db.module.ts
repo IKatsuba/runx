@@ -1,13 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Entity, PrimaryColumn } from 'typeorm';
+import { ApiHttpJobEntity, TaskEntity } from './entities';
 
-@Entity()
-class Enty {
-  @PrimaryColumn()
-  some: string;
-}
-
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -15,7 +10,7 @@ class Enty {
       host: 'localhost',
       port: 5432,
       database: 'postgres',
-      entities: [Enty],
+      entities: [ApiHttpJobEntity, TaskEntity],
       synchronize: true,
     }),
   ],
