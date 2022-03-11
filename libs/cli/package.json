@@ -4,7 +4,7 @@
   "oclif": {
     "bin": "runx",
     "dirname": "runx",
-    "commands": "./src/commands",
+    "commands": "./commands",
     "plugins": [
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"

@@ -12,7 +12,8 @@
     "serve:api": "npm run nx -- serve api",
     "start": "node dist/apps/api/main.js",
     "test": "npm run nx -- test",
-    "dev": "NX_CLOUD_API_URL=http://localhost:3333 npm run nx -- build cli --runner cloud"
+    "dev": "npm run nx -- run-many --target build --all --runner cloud",
+    "dev:egent": "ts-node -P libs/cli/tsconfig.lib.json libs/cli/src/index.ts"
   },
   "dependencies": {
     "@angular/animations": "13.2.5",
@@ -29,6 +30,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/typeorm": "^8.0.3",
     "@nrwl/angular": "13.8.4",
+    "execa": "^5.1.1",
     "firebase-admin": "^10.0.2",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",

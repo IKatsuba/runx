@@ -1,10 +1,10 @@
 import {
   Context,
-  ApiHttpJob,
-  ApiHttpJobStatus,
+  Job,
+  JobStatus,
+  JobTask,
 } from '@runx/nx-runners/src/core/job';
 import { DefaultTasksRunnerOptions } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
-import { Task } from '@nrwl/devkit';
 import {
   Column,
   Entity,
@@ -15,11 +15,11 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class ApiHttpJobEntity implements ApiHttpJob {
+export class JobEntity implements Job {
   @Column('json')
   context: Context;
 
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: string;
 
   @Column('json')
@@ -27,35 +27,56 @@ export class ApiHttpJobEntity implements ApiHttpJob {
 
   @Column({
     type: 'enum',
-    enum: ApiHttpJobStatus,
-    default: ApiHttpJobStatus.Pending,
+    enum: [JobStatus.Planned, JobStatus.Running, JobStatus.Completed],
+    default: JobStatus.Planned,
   })
-  status: ApiHttpJobStatus;
+  status: JobStatus;
 
-  @OneToMany(() => TaskEntity, (task) => task.job)
+  @OneToMany(() => TaskEntity, (task) => task.job, {
+    cascade: true,
+  })
   tasks: TaskEntity[];
+
+  @Column({ nullable: true })
+  exitCode: number;
 }
 
 @Entity()
-export class TaskEntity implements Task {
-  @Column()
-  hash: string;
-  @Column('json')
+export class TaskEntity implements JobTask {
+  @Column({ nullable: true })
+  hash?: string;
+  @Column('json', { nullable: true })
   hashDetails: {
     command: string;
     nodes: { [p: string]: string };
     implicitDeps: { [p: string]: string };
     runtime: { [p: string]: string };
   };
-  @PrimaryColumn()
+
+  @PrimaryGeneratedColumn('uuid')
+  uuid: string;
+
+  /**
+   * @deprecated use uuid
+   */
   id: string;
+
   @Column('json')
   overrides: any;
-  @Column()
-  projectRoot: string;
+  @Column({ nullable: true })
+  projectRoot?: string;
   @Column('json')
   target: { project: string; target: string; configuration?: string };
 
-  @ManyToOne(() => ApiHttpJobEntity, (job) => job.tasks)
-  job: ApiHttpJobEntity;
+  @Column('enum', {
+    enum: [JobStatus.Planned, JobStatus.Running, JobStatus.Completed],
+    default: JobStatus.Planned,
+  })
+  status: JobStatus;
+
+  @ManyToOne(() => JobEntity, (job) => job.tasks)
+  job: JobEntity;
+
+  @Column({ nullable: true })
+  exitCode: number;
 }

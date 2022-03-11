@@ -3,8 +3,9 @@ import { CacheModule } from '@runx/api/http/cache';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
 import { parseConfig } from '@runx/api/env';
-import { DbModule } from '@runx/api/db';
+import { DbModule, JobEntity, TaskEntity } from '@runx/api/db';
 import { ApiHttpJobModule } from '@runx/api/http/job';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -17,6 +18,14 @@ import { ApiHttpJobModule } from '@runx/api/http/job';
       ],
     }),
     CacheModule,
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'postgres',
+      entities: [JobEntity, TaskEntity],
+      synchronize: true,
+    }),
     DbModule,
     ApiHttpJobModule,
   ],

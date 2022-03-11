@@ -1,10 +1,8 @@
-import { Task } from '@nrwl/devkit';
 import axios, { Axios } from 'axios';
 import { Injectable } from 'injection-js';
-import { CloudTask, CloudTaskStatus } from './cloud-task';
 import { OPTIONS } from '../core/options';
 import { CloudRunnerOptions } from './runner-factory';
-import { ApiHttpJob } from '../core/job';
+import { Job } from '../core/job';
 
 export const axiosProvider = {
   provide: Axios,
@@ -17,14 +15,14 @@ export const axiosProvider = {
 export class Api {
   constructor(private axios: Axios | null) {}
 
-  async createJob(job: Omit<ApiHttpJob, 'id' | 'status'>): Promise<ApiHttpJob> {
-    const { data } = await this.axios.post<ApiHttpJob>(`/job`, job);
+  async createJob(job: Omit<Job, 'status'>): Promise<Job> {
+    const { data } = await this.axios.post<Job>(`/job`, job);
 
     return data;
   }
 
-  async getJob(id: string): Promise<ApiHttpJob> {
-    const { data: job } = await this.axios.get<ApiHttpJob>(`/job/${id}`);
+  async getJob(id: string): Promise<Job> {
+    const { data: job } = await this.axios.get<Job>(`/job/${id}`);
 
     return job;
   }
