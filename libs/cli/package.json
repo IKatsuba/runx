@@ -1,14 +1,8 @@
 {
   "name": "@runx/cli",
   "version": "0.0.1",
-  "oclif": {
-    "bin": "runx",
-    "dirname": "runx",
-    "commands": "./commands",
-    "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins"
-    ]
+  "bin": {
+    "runx": "./bin/run"
   },
   "files": [
     "/bin",
