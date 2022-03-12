@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JobEntity, TaskEntity } from '@runx/api/db';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '@runx/nx-runners/src/core/job';
+import groupBy from '@tinkoff/utils/object/groupBy';
 
 @Controller()
 export class JobController {
@@ -34,33 +35,33 @@ export class JobController {
       return job;
     }
 
-    job.tasks = await this.taskRepo.find({
-      skip: 0,
-      take: 2,
-      where: {
-        job: { id },
-        status: JobStatus.Planned,
-      },
+    const tasks = await this.taskRepo.find({
+      where: { job: { id } },
     });
 
-    if (job.tasks.length) {
-      job.tasks.forEach((task) => (task.status = JobStatus.Running));
+    const {
+      [JobStatus.Planned]: plannedTasks,
+      [JobStatus.Running]: runningTasks,
+      [JobStatus.Completed]: completedTasks,
+    } = groupBy((task) => task.status, tasks);
+
+    if (plannedTasks.length) {
+      const batch = plannedTasks.slice(0, 2);
+
+      batch.forEach((task) => (task.status = JobStatus.Running));
 
       await this.taskRepo.update(
-        job.tasks.map(({ uuid }) => uuid),
+        batch.map(({ uuid }) => uuid),
         { status: JobStatus.Running }
       );
-    } else {
-      const tasks = await this.taskRepo.find({
-        where: { job: { id } },
-      });
 
-      if (
-        !tasks.find((task) =>
-          [JobStatus.Planned, JobStatus.Running].includes(task.status)
-        )
-      ) {
-        const exitCode = tasks.find((task) => task.exitCode !== 0) ? 1 : 0;
+      job.tasks = batch;
+    } else {
+      job.tasks = [];
+      if (!plannedTasks.length && !runningTasks.length) {
+        const exitCode = completedTasks.find((task) => task.exitCode !== 0)
+          ? 1
+          : 0;
 
         await this.jobRepo.update(id, {
           status: JobStatus.Completed,
@@ -73,29 +74,6 @@ export class JobController {
 
     return job;
   }
-
-  // @Post(':jobId/task/complete')
-  // async updateTask(
-  //   @Param('jobId') jobId: string,
-  //   @Body() taskIds: string[]
-  // ): Promise<JobEntity> {
-  //   await this.taskRepo.update(taskIds, { status: JobStatus.Completed });
-  //
-  //   const job = await this.jobRepo
-  //     .createQueryBuilder('job')
-  //     .whereInIds(jobId)
-  //     .leftJoinAndSelect('job.tasks', 'task', 'task.status != :status', {
-  //       status: JobStatus.Completed,
-  //     })
-  //     .getOne();
-  //
-  //   if (job.status !== JobStatus.Completed && !job.tasks.length) {
-  //     await this.jobRepo.update(job.id, { status: JobStatus.Completed });
-  //     job.status = JobStatus.Completed;
-  //   }
-  //
-  //   return job;
-  // }
 
   @Post('task/:taskId')
   async updateTask(

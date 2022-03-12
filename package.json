@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/typeorm": "^8.0.3",
     "@nrwl/angular": "13.8.4",
+    "@tinkoff/utils": "^2.2.1",
     "execa": "^5.1.1",
     "firebase-admin": "^10.0.2",
     "pg": "^8.7.1",
