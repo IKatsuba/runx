@@ -2,7 +2,7 @@ import axios, { Axios } from 'axios';
 import { Injectable } from 'injection-js';
 import { OPTIONS } from '../core/options';
 import { CloudRunnerOptions } from './runner-factory';
-import { Job } from '../core/job';
+import { Job, JobTask } from '../core/job';
 
 export const axiosProvider = {
   provide: Axios,
@@ -25,5 +25,11 @@ export class Api {
     const { data: job } = await this.axios.get<Job>(`/job/${id}`);
 
     return job;
+  }
+
+  async getJobTasks(id: string): Promise<JobTask[]> {
+    const { data } = await this.axios.get<JobTask[]>(`/job/${id}/task`);
+
+    return data;
   }
 }

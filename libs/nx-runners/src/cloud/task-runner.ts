@@ -30,7 +30,7 @@ export const cloudTaskRunnerProvider: FactoryProvider = {
     logger: Logger,
     api: Api
   ) => {
-    return () => {
+    return async () => {
       const endGame$ = new Subject<void>();
 
       const runner = defer(() =>
@@ -52,7 +52,17 @@ export const cloudTaskRunnerProvider: FactoryProvider = {
         })
       );
 
-      return lastValueFrom(runner);
+      const { id } = await lastValueFrom(runner);
+
+      const jobTasks = await api.getJobTasks(id);
+
+      return jobTasks.reduce(
+        (result, task) => ({
+          ...result,
+          [task.id]: task.exitCode === 0 ? 'success' : 'failure',
+        }),
+        {}
+      );
     };
   },
 };

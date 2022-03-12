@@ -22,7 +22,7 @@ export class JobController {
   }
 
   @Get('job/:id')
-  getJob(@Param(':id') id: string): Promise<JobEntity> {
+  getJob(@Param('id') id: string): Promise<JobEntity> {
     return this.jobRepo.findOne(id);
   }
 
@@ -40,9 +40,9 @@ export class JobController {
     });
 
     const {
-      [JobStatus.Planned]: plannedTasks,
-      [JobStatus.Running]: runningTasks,
-      [JobStatus.Completed]: completedTasks,
+      [JobStatus.Planned]: plannedTasks = [],
+      [JobStatus.Running]: runningTasks = [],
+      [JobStatus.Completed]: completedTasks = [],
     } = groupBy((task) => task.status, tasks);
 
     if (plannedTasks.length) {
@@ -83,5 +83,12 @@ export class JobController {
     await this.taskRepo.update(taskId, task);
 
     return this.taskRepo.findOne(taskId);
+  }
+
+  @Get('job/:id/task')
+  getJobTasks(@Param('id') id: string) {
+    return this.taskRepo.find({
+      where: { job: { id } },
+    });
   }
 }

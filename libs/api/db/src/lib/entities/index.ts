@@ -38,7 +38,7 @@ export class JobEntity implements Job {
   tasks: TaskEntity[];
 
   @Column({ nullable: true })
-  exitCode: number;
+  exitCode?: number;
 }
 
 @Entity()
@@ -56,9 +56,7 @@ export class TaskEntity implements JobTask {
   @PrimaryGeneratedColumn('uuid')
   uuid: string;
 
-  /**
-   * @deprecated use uuid
-   */
+  @Column()
   id: string;
 
   @Column('json')

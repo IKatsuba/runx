@@ -22,6 +22,7 @@ export interface JobTask extends Task {
 export interface Job {
   id: string;
   status: JobStatus;
+  exitCode?: number;
   tasks: JobTask[];
   options: DefaultTasksRunnerOptions;
   context: Context;
