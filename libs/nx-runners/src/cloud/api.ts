@@ -16,19 +16,19 @@ export class Api {
   constructor(private axios: Axios | null) {}
 
   async createJob(job: Omit<Job, 'status'>): Promise<Job> {
-    const { data } = await this.axios.post<Job>(`/job`, job);
+    const { data } = await this.axios.post<Job>(`v1/job`, job);
 
     return data;
   }
 
   async getJob(id: string): Promise<Job> {
-    const { data: job } = await this.axios.get<Job>(`/job/${id}`);
+    const { data: job } = await this.axios.get<Job>(`v1/job/${id}`);
 
     return job;
   }
 
   async getJobTasks(id: string): Promise<JobTask[]> {
-    const { data } = await this.axios.get<JobTask[]>(`/job/${id}/task`);
+    const { data } = await this.axios.get<JobTask[]>(`v1/job/${id}/task`);
 
     return data;
   }

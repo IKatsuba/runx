@@ -13,7 +13,7 @@ export class CloudStorage extends Storage {
   ): Promise<Buffer | Uint8Array | Blob | string | Readable> {
     const {
       data: [url],
-    } = await this.api.get(`cache/${key}/urls`);
+    } = await this.api.get(`v1/cache/${key}/urls`);
 
     if (!url) {
       throw new Error('No cache URL found');
@@ -32,7 +32,7 @@ export class CloudStorage extends Storage {
   ): Promise<any> {
     const {
       data: [, url],
-    } = await this.api.get(`cache/${key}/urls`);
+    } = await this.api.get(`v1/cache/${key}/urls`);
 
     await axios.put(url, fileContent, {
       headers: {
