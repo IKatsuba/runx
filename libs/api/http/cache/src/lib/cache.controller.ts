@@ -1,29 +1,33 @@
-import { Body, Controller, Get, Param, Post, Version } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { FileStorage } from '@runx/api/storage';
-import { combineLatest, forkJoin, Observable } from 'rxjs';
+import {
+  forkJoin,
+  merge,
+  Observable,
+  of,
+  toArray,
+  catchError,
+  NEVER,
+} from 'rxjs';
+import { TaskCache } from '@runx/nx-runners/src/core/cache';
 
 @Controller('cache')
 export class CacheController {
   constructor(private fileStorage: FileStorage) {}
 
-  @Post()
-  getManyUrls(
-    @Body() hashes: string[]
-  ): Observable<Record<string, [get: string, put: string]>> {
-    return forkJoin<Record<string, Observable<[get: string, put: string]>>>(
-      hashes.reduce((acc, hash) => {
-        acc[hash] = this.getUrls(hash);
-
-        return acc;
-      }, {})
-    );
+  @Get()
+  getHashes(@Query('hashes') hashes: string[]): Observable<TaskCache[]> {
+    return merge(
+      ...hashes.map((hash) => this.getHash(hash).pipe(catchError(() => NEVER)))
+    ).pipe(toArray());
   }
 
-  @Get('/:hash/urls')
-  getUrls(@Param('hash') hash: string): Observable<[get: string, put: string]> {
-    return combineLatest([
-      this.fileStorage.getDownloadUrl(hash),
-      this.fileStorage.getUploadUrl(hash),
-    ]);
+  @Get('/:hash')
+  getHash(@Param('hash') hash: string): Observable<TaskCache> {
+    return forkJoin({
+      id: of(hash),
+      getUrl: this.fileStorage.getDownloadUrl(hash),
+      putUrl: this.fileStorage.getUploadUrl(hash),
+    });
   }
 }
