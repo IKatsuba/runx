@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@runx/api/http/cache';
-import { ConfigModule, registerAs } from '@nestjs/config';
+import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
-import { parseConfig } from '@runx/api/env';
+import { Environment, parseConfig } from '@runx/api/env';
 import { DbModule, JobEntity, TaskEntity } from '@runx/api/db';
 import { ApiHttpJobModule } from '@runx/api/http/job';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,19 +12,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
-        () => environment,
+        registerAs('db', () => parseConfig(process.env.DB_CONFIG)),
         registerAs('firebase', () => parseConfig(process.env.FIREBASE_CONFIG)),
         registerAs('s3', () => parseConfig(process.env.S3_CONFIG)),
+        () => environment,
       ],
     }),
     CacheModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      database: 'postgres',
-      entities: [JobEntity, TaskEntity],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: (config: ConfigService<Environment>) => ({
+        ...config.get('db'),
+        entities: [JobEntity, TaskEntity],
+      }),
+      inject: [ConfigService],
     }),
     DbModule,
     ApiHttpJobModule,
