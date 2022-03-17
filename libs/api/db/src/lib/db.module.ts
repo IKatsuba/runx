@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Environment } from '@runx/api/env';
 import { JobEntity, TaskEntity } from './entities';
 
+@Global()
 @Module({})
 export class DbModule {
   static forRoot(): DynamicModule {
@@ -17,7 +18,9 @@ export class DbModule {
           }),
           inject: [ConfigService],
         }),
+        TypeOrmModule.forFeature([JobEntity, TaskEntity]),
       ],
+      exports: [TypeOrmModule],
     };
   }
 }
