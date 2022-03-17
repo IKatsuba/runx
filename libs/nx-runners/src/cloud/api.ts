@@ -28,7 +28,7 @@ export class Api {
   }
 
   async getJobTasks(id: string): Promise<JobTask[]> {
-    const { data } = await this.axios.get<JobTask[]>(`v1/job/${id}/task`);
+    const { data } = await this.axios.get<JobTask[]>(`v1/task?jobId=${id}`);
 
     return data;
   }

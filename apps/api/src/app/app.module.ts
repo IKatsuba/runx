@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@runx/api/http/cache';
+import { ApiHttpCacheModule } from '@runx/api/http/cache';
 import { ApiHttpJobModule } from '@runx/api/http/job';
+import { ApiHttpTaskModule } from '@runx/api/http/task';
 import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
 import { parseConfig } from '@runx/api/env';
@@ -18,8 +19,9 @@ import { DbModule } from '@runx/api/db';
       ],
     }),
     DbModule.forRoot(),
-    CacheModule,
+    ApiHttpCacheModule,
     ApiHttpJobModule,
+    ApiHttpTaskModule,
   ],
 })
 export class AppModule {}

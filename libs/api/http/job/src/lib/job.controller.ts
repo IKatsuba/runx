@@ -5,14 +5,14 @@ import { Repository } from 'typeorm';
 import { Job, JobStatus } from '@runx/nx-runners/src/core/job';
 import groupBy from '@tinkoff/utils/object/groupBy';
 
-@Controller()
+@Controller('job')
 export class JobController {
   constructor(
     @InjectRepository(JobEntity) private jobRepo: Repository<JobEntity>,
     @InjectRepository(TaskEntity) private taskRepo: Repository<TaskEntity>
   ) {}
 
-  @Post('job')
+  @Post()
   async createJob(@Body() job: Job): Promise<JobEntity> {
     const instance = this.jobRepo.create(job);
 
@@ -21,12 +21,12 @@ export class JobController {
     return instance;
   }
 
-  @Get('job/:id')
+  @Get(':id')
   getJob(@Param('id') id: string): Promise<JobEntity> {
     return this.jobRepo.findOne(id);
   }
 
-  @Get('job/:id/task/planned')
+  @Get(':id/task/planned')
   async getTask(@Param('id') id: string): Promise<JobEntity> {
     const job = await this.jobRepo.findOne(id);
 
@@ -73,22 +73,5 @@ export class JobController {
     }
 
     return job;
-  }
-
-  @Post('task/:taskId')
-  async updateTask(
-    @Param('taskId') taskId: string,
-    @Body() task: TaskEntity
-  ): Promise<TaskEntity> {
-    await this.taskRepo.update(taskId, task);
-
-    return this.taskRepo.findOne(taskId);
-  }
-
-  @Get('job/:id/task')
-  getJobTasks(@Param('id') id: string) {
-    return this.taskRepo.find({
-      where: { job: { id } },
-    });
   }
 }

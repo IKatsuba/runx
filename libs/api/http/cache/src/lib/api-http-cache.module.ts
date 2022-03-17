@@ -6,4 +6,4 @@ import { StorageModule } from '@runx/api/storage';
   controllers: [CacheController],
   imports: [StorageModule],
 })
-export class CacheModule {}
+export class ApiHttpCacheModule {}
