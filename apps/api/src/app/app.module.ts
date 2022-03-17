@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@runx/api/http/cache';
-import { ConfigModule, ConfigService, registerAs } from '@nestjs/config';
-import { environment } from '../environments/environment';
-import { Environment, parseConfig } from '@runx/api/env';
-import { DbModule, JobEntity, TaskEntity } from '@runx/api/db';
 import { ApiHttpJobModule } from '@runx/api/http/job';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, registerAs } from '@nestjs/config';
+import { environment } from '../environments/environment';
+import { parseConfig } from '@runx/api/env';
+import { DbModule } from '@runx/api/db';
 
 @Module({
   imports: [
@@ -18,15 +17,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         () => environment,
       ],
     }),
+    DbModule.forRoot(),
     CacheModule,
-    TypeOrmModule.forRootAsync({
-      useFactory: (config: ConfigService<Environment>) => ({
-        ...config.get('db'),
-        entities: [JobEntity, TaskEntity],
-      }),
-      inject: [ConfigService],
-    }),
-    DbModule,
     ApiHttpJobModule,
   ],
 })

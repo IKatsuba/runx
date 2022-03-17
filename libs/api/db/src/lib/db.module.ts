@@ -1,6 +1,23 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+import { Environment } from '@runx/api/env';
+import { JobEntity, TaskEntity } from './entities';
 
-@Module({
-  imports: [],
-})
-export class DbModule {}
+@Module({})
+export class DbModule {
+  static forRoot(): DynamicModule {
+    return {
+      module: DbModule,
+      imports: [
+        TypeOrmModule.forRootAsync({
+          useFactory: (config: ConfigService<Environment>) => ({
+            ...config.get('db'),
+            entities: [JobEntity, TaskEntity],
+          }),
+          inject: [ConfigService],
+        }),
+      ],
+    };
+  }
+}
