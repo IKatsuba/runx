@@ -32,4 +32,10 @@ export class Api {
 
     return data;
   }
+
+  async sendMetrics(
+    values: [Record<string, number | string>, number][]
+  ): Promise<unknown> {
+    return this.axios.post<void>(`metrics`, values);
+  }
 }

@@ -43,7 +43,7 @@ describe('nxAgent', () => {
         status: JobStatus.Planned,
         tasks: [
           {
-            uuid: '1923019283',
+            hash: '1923019283',
             id: 'api:_mock',
             target: {
               project: 'api',
@@ -78,7 +78,7 @@ describe('nxAgent', () => {
         status: JobStatus.Planned,
         tasks: [
           {
-            uuid: '1923019283',
+            hash: '1923019283',
             id: 'api:_errorTarget',
             target: {
               project: 'api',
@@ -123,7 +123,7 @@ describe('nxAgent', () => {
         status: JobStatus.Planned,
         tasks: [
           {
-            uuid: '1923019283',
+            hash: '1923019283',
             id: 'api:_mock',
             target: {
               project: 'api',

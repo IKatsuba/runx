@@ -19,6 +19,7 @@ import {
   tap,
 } from 'rxjs';
 import { Api } from './api';
+import { Hasher } from '@nrwl/workspace/src/core/hasher/hasher';
 
 export const cloudTaskRunnerProvider: FactoryProvider = {
   provide: TASK_RUNNER,
@@ -32,6 +33,15 @@ export const cloudTaskRunnerProvider: FactoryProvider = {
   ) => {
     return async () => {
       const endGame$ = new Subject<void>();
+
+      const hasher = new Hasher(context.projectGraph, context.nxJson, options);
+
+      for (const task of tasks) {
+        const hash = await hasher.hashTaskWithDepsAndContext(task);
+
+        task.hash = hash.value;
+        task.hashDetails = hash.details;
+      }
 
       const runner = defer(() =>
         api.createJob({

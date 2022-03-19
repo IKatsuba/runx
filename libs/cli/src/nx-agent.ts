@@ -58,7 +58,7 @@ export const nxAgent = timer(0, getIntervalDuration()).pipe(
         }
 
         return api
-          .post<JobTask>(`v1/task/${task.uuid}`, {
+          .post<JobTask>(`v1/task/${task.hash}`, {
             status: JobStatus.Completed,
             exitCode,
           })

@@ -16,8 +16,8 @@
     "dev:egent": "ts-node -P libs/cli/tsconfig.lib.json libs/cli/src/index.ts"
   },
   "dependencies": {
-    "@angular/animations": "13.2.5",
     "@angular/common": "13.2.5",
+    "@angular/animations": "13.2.5",
     "@angular/compiler": "13.2.5",
     "@angular/core": "13.2.5",
     "@angular/forms": "13.2.5",
@@ -31,9 +31,11 @@
     "@nestjs/typeorm": "^8.0.3",
     "@nrwl/angular": "13.8.4",
     "@tinkoff/utils": "^2.2.1",
+    "@willsoto/nestjs-prometheus": "^4.6.0",
     "execa": "^5.1.1",
     "firebase-admin": "^10.0.2",
     "pg": "^8.7.1",
+    "prom-client": "^14.0.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "~7.4.0",
     "tslib": "^2.0.0",

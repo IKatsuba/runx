@@ -6,6 +6,7 @@ import { ConfigModule, registerAs } from '@nestjs/config';
 import { environment } from '../environments/environment';
 import { parseConfig } from '@runx/api/env';
 import { DbModule } from '@runx/api/db';
+import { ApiMetricsModule } from '@runx/api/metrics';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DbModule } from '@runx/api/db';
     ApiHttpCacheModule,
     ApiHttpJobModule,
     ApiHttpTaskModule,
+    ApiMetricsModule.forRoot(),
   ],
 })
 export class AppModule {}

@@ -15,8 +15,8 @@ export interface Context {
 }
 
 export interface JobTask extends Task {
-  uuid?: string;
   exitCode?: number;
+  executionTime?: number;
 }
 
 export interface Job {

@@ -5,14 +5,7 @@ import {
   JobTask,
 } from '@runx/nx-runners/src/core/job';
 import { DefaultTasksRunnerOptions } from '@nrwl/workspace/src/tasks-runner/default-tasks-runner';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity()
 export class JobEntity implements Job {
@@ -43,8 +36,9 @@ export class JobEntity implements Job {
 
 @Entity()
 export class TaskEntity implements JobTask {
-  @Column({ nullable: true })
-  hash?: string;
+  @PrimaryColumn()
+  hash: string;
+
   @Column('json', { nullable: true })
   hashDetails: {
     command: string;
@@ -52,9 +46,6 @@ export class TaskEntity implements JobTask {
     implicitDeps: { [p: string]: string };
     runtime: { [p: string]: string };
   };
-
-  @PrimaryGeneratedColumn('uuid')
-  uuid: string;
 
   @Column()
   id: string;
@@ -77,4 +68,7 @@ export class TaskEntity implements JobTask {
 
   @Column({ nullable: true })
   exitCode: number;
+
+  @Column({ nullable: true })
+  executionTime: number;
 }

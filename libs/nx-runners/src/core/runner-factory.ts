@@ -8,7 +8,7 @@ import { noopStorageProvider } from './storage';
 import { noopLifeCycleProvider } from './life-cycle';
 import { loggerProviders } from './logger';
 import { TASKS } from './tasks';
-import { INITIALIZE } from './hooks';
+import { COMPLETION, INITIALIZE } from './hooks';
 import { defaultTaskRunnerProvider, TASK_RUNNER } from './task-runner';
 import { CONTEXT } from './context';
 import { Context } from './job';
@@ -16,7 +16,7 @@ import { Context } from './job';
 export function runnerFactory<T extends DefaultTasksRunnerOptions>(
   providers: Provider[]
 ): TasksRunner<T> {
-  return (tasks: Task[], options: T, context?: Context) => {
+  return async (tasks: Task[], options: T, context?: Context) => {
     const rootInjector = ReflectiveInjector.resolveAndCreate([
       {
         provide: OPTIONS,
@@ -40,8 +40,12 @@ export function runnerFactory<T extends DefaultTasksRunnerOptions>(
       rootInjector
     );
 
-    return Promise.all(runnerInjector.get(INITIALIZE, [])).then<any>(
-      runnerInjector.get(TASK_RUNNER)
-    );
+    const result = await Promise.all(
+      runnerInjector.get(INITIALIZE, []).map((fn) => fn())
+    ).then<any>(runnerInjector.get(TASK_RUNNER));
+
+    await Promise.all(runnerInjector.get(COMPLETION, []).map((fn) => fn()));
+
+    return result;
   };
 }

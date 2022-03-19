@@ -51,7 +51,7 @@ export class JobController {
       batch.forEach((task) => (task.status = JobStatus.Running));
 
       await this.taskRepo.update(
-        batch.map(({ uuid }) => uuid),
+        batch.map(({ hash }) => hash),
         { status: JobStatus.Running }
       );
 

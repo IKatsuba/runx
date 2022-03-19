@@ -22,6 +22,7 @@
       "@runx/api/http/cache": ["libs/api/http/cache/src/index.ts"],
       "@runx/api/http/job": ["libs/api/http/job/src/index.ts"],
       "@runx/api/http/task": ["libs/api/http/task/src/index.ts"],
+      "@runx/api/metrics": ["libs/api/metrics/src/index.ts"],
       "@runx/api/storage": ["libs/api/storage/src/index.ts"],
       "@runx/cli": ["libs/cli/src/index.ts"],
       "@runx/nx-runners/*": ["libs/nx-runners/*"]

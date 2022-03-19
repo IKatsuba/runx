@@ -8,6 +8,7 @@ import { OPTIONS } from '../core/options';
 import { cloudTaskRunnerProvider } from './task-runner';
 import { DISTRIBUTED_EXECUTION_IS_ENABLED } from './distributed-execution';
 import { Api, axiosProvider } from './api';
+import { lifeCycleProvider } from './life-cycle';
 
 export interface CloudRunnerOptions extends DefaultTasksRunnerOptions {
   remoteCache?: RemoteCache;
@@ -39,4 +40,5 @@ export const cloudCachingRunner = runnerFactory<CloudRunnerOptions>([
   distributedExecutionIsEnabled ? cloudTaskRunnerProvider : [],
   axiosProvider,
   Api,
+  lifeCycleProvider,
 ]);

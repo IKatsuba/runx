@@ -1,0 +1,5 @@
+POST http://localhost:3333/metrics
+Content-Type: application/json
+
+[]
+
