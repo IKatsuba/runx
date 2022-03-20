@@ -17,11 +17,13 @@
     "esModuleInterop": true,
     "strict": false,
     "paths": {
+      "@runx/api/auth": ["libs/api/auth/src/index.ts"],
       "@runx/api/db": ["libs/api/db/src/index.ts"],
       "@runx/api/env": ["libs/api/env/src/index.ts"],
       "@runx/api/http/cache": ["libs/api/http/cache/src/index.ts"],
       "@runx/api/http/job": ["libs/api/http/job/src/index.ts"],
       "@runx/api/http/task": ["libs/api/http/task/src/index.ts"],
+      "@runx/api/http/workspace": ["libs/api/http/workspace/src/index.ts"],
       "@runx/api/metrics": ["libs/api/metrics/src/index.ts"],
       "@runx/api/storage": ["libs/api/storage/src/index.ts"],
       "@runx/cli": ["libs/cli/src/index.ts"],

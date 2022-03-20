@@ -1,11 +1,13 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JobEntity, TaskEntity } from '@runx/api/db';
 import { Repository } from 'typeorm';
 import { Job, JobStatus } from '@runx/nx-runners/src/core/job';
 import groupBy from '@tinkoff/utils/object/groupBy';
+import { AuthGuard } from '@runx/api/auth';
 
 @Controller('job')
+@UseGuards(AuthGuard)
 export class JobController {
   constructor(
     @InjectRepository(JobEntity) private jobRepo: Repository<JobEntity>,

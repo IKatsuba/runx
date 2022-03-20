@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ApiHttpCacheModule } from '@runx/api/http/cache';
+import { ApiHttpWorkspaceModule } from '@runx/api/http/workspace';
 import { ApiHttpJobModule } from '@runx/api/http/job';
 import { ApiHttpTaskModule } from '@runx/api/http/task';
 import { ConfigModule, registerAs } from '@nestjs/config';
@@ -7,6 +8,7 @@ import { environment } from '../environments/environment';
 import { parseConfig } from '@runx/api/env';
 import { DbModule } from '@runx/api/db';
 import { ApiMetricsModule } from '@runx/api/metrics';
+import { ApiAuthModule } from '@runx/api/auth';
 
 @Module({
   imports: [
@@ -23,10 +25,12 @@ import { ApiMetricsModule } from '@runx/api/metrics';
       ],
     }),
     DbModule.forRoot(),
+    ApiHttpWorkspaceModule,
     ApiHttpCacheModule,
     ApiHttpJobModule,
     ApiHttpTaskModule,
     ApiMetricsModule.forRoot(),
+    ApiAuthModule,
   ],
 })
 export class AppModule {}

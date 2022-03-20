@@ -13,6 +13,7 @@ import { lifeCycleProvider } from './life-cycle';
 export interface CloudRunnerOptions extends DefaultTasksRunnerOptions {
   remoteCache?: RemoteCache;
   apiUrl?: string;
+  accessToken?: string;
 }
 
 export const distributedExecutionIsEnabled =
@@ -24,6 +25,8 @@ export const cloudCachingRunner = runnerFactory<CloudRunnerOptions>([
     useFactory: (options: CloudRunnerOptions) => ({
       ...options,
       apiUrl: options.apiUrl ?? (process.env.NX_CLOUD_API_URL || null),
+      accessToken:
+        options.apiUrl ?? (process.env.NX_CLOUD_ACCESS_TOKEN || null),
     }),
     deps: [[new SkipSelf(), OPTIONS]],
   },

@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TaskEntity } from '@runx/api/db';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AuthGuard } from '@runx/api/auth';
 
 @Controller('task')
+@UseGuards(AuthGuard)
 export class TaskController {
   constructor(
     @InjectRepository(TaskEntity) private taskRepo: Repository<TaskEntity>
