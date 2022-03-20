@@ -4,7 +4,7 @@ import {
   PrometheusModule,
 } from '@willsoto/nestjs-prometheus';
 import { MetricsController } from './metrics.controller';
-import { MetricsService } from './metrics.service';
+import { metricsProvider, MetricsService } from './metrics.service';
 
 @Global()
 @Module({})
@@ -15,17 +15,27 @@ export class ApiMetricsModule {
       imports: [PrometheusModule.register({ controller: MetricsController })],
       exports: [PrometheusModule, MetricsService],
       providers: [
-        MetricsService,
+        metricsProvider,
         makeSummaryProvider({
           name: 'task_execution_time',
           help: 'Task execution time',
           labelNames: [
-            'id',
+            'overrides',
             'project',
             'target',
             'configuration',
             'npmScope',
-            'command',
+          ],
+        }),
+        makeSummaryProvider({
+          name: 'task_saved_time',
+          help: 'Task saved time',
+          labelNames: [
+            'overrides',
+            'project',
+            'target',
+            'configuration',
+            'npmScope',
           ],
         }),
       ],

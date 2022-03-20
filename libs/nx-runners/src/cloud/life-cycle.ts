@@ -6,7 +6,7 @@ import { Injectable, Provider } from 'injection-js';
 import { Api } from './api';
 import { Context, JobTask } from '../core/job';
 import { CONTEXT } from '../core/context';
-import { getCommandAsString } from '@nrwl/workspace/src/tasks-runner/utils';
+import { unparse } from '@nrwl/workspace/src/tasks-runner/utils';
 import { COMPLETION } from '../core/hooks';
 
 @Injectable()
@@ -49,31 +49,28 @@ export const lifeCycleProvider: Provider[] = [
           [Record<string, number | string>, number]
         >(([, task]) => {
           const {
-            id,
             executionTime,
             target: { project, target, configuration },
+            overrides,
           } = task;
 
           const {
             nxJson: { npmScope },
           } = context;
 
-          const command = getCommandAsString(task);
-
           return [
             {
-              id,
+              overrides: unparse(overrides).join(' '),
               project,
               target,
               configuration,
               npmScope,
-              command,
             },
             executionTime,
           ];
         });
 
-        return api.sendMetrics(tasks);
+        return api.sendMetrics(tasks).catch(() => null);
       };
     },
     deps: [LifeCycle, CONTEXT, Api],

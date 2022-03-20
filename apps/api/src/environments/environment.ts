@@ -9,5 +9,9 @@ export const environment: Environment = {
     port: 5432,
     database: 'postgres',
     synchronize: true,
+    retryAttempts: 2,
+  },
+  prometheus: {
+    baseUrl: 'http://localhost:9090/api/v1',
   },
 };

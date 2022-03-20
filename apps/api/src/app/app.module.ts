@@ -13,6 +13,9 @@ import { ApiMetricsModule } from '@runx/api/metrics';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [
+        registerAs('prometheus', () =>
+          parseConfig(process.env.PROMETHEUS_CONFIG)
+        ),
         registerAs('db', () => parseConfig(process.env.DB_CONFIG)),
         registerAs('firebase', () => parseConfig(process.env.FIREBASE_CONFIG)),
         registerAs('s3', () => parseConfig(process.env.S3_CONFIG)),

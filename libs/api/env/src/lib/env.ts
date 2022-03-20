@@ -13,4 +13,7 @@ export interface Environment {
   s3?: S3StorageConfig;
   firebase?: FirebaseStorageConfig;
   db?: TypeOrmModuleOptions;
+  prometheus?: {
+    baseUrl: string;
+  };
 }

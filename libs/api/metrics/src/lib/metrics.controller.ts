@@ -9,11 +9,15 @@ export class MetricsController extends PrometheusController {
   }
 
   @Post()
-  sendMetrics(
+  async sendMetrics(
     @Body() values: [Record<string, number | string>, number][]
-  ): void {
+  ): Promise<void> {
     for (const [labels, value] of values) {
-      this.metricsService.addMetric(labels, value);
+      if (value) {
+        this.metricsService.addExecutionTime(labels, value);
+      } else {
+        this.metricsService.addSavedTime(labels);
+      }
     }
   }
 }
