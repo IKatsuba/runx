@@ -1,7 +1,7 @@
 import { NoopStorage, Storage } from '../core/storage';
 import { OPTIONS } from '../core/options';
 import { Readable } from 'stream';
-import { FirebaseCachingRunnerOptions } from './runner';
+import { FirebaseCachingRunnerOptions } from './runner-factory';
 import firebase, { ServiceAccount } from 'firebase-admin';
 import axios from 'axios';
 import { AppOptions } from 'firebase-admin/lib/app/core';

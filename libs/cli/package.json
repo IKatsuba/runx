@@ -1,0 +1,11 @@
+{
+  "name": "@runx/cli",
+  "version": "0.0.1",
+  "bin": {
+    "runx": "./bin/run"
+  },
+  "files": [
+    "/bin",
+    "/src"
+  ]
+}

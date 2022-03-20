@@ -1,30 +1,26 @@
 import { NoopStorage, Storage } from '../core/storage';
-import { OPTIONS } from '../core/options';
 import { Readable } from 'stream';
-import { CloudRunnerOptions } from './runner';
-import axios, { AxiosInstance } from 'axios';
+import axios, { Axios } from 'axios';
+import { Optional } from 'injection-js';
+import { TaskCache } from '../core/cache';
 
 export class CloudStorage extends Storage {
-  private api: AxiosInstance;
-
-  constructor(apiUrl: string) {
+  constructor(private api: Axios) {
     super();
-
-    this.api = axios.create({ baseURL: apiUrl });
   }
 
   async get(
     key: string
   ): Promise<Buffer | Uint8Array | Blob | string | Readable> {
-    const {
-      data: [url],
-    } = await this.api.get(`cache/${key}/urls`);
+    const { data: { getUrl } = {} } = await this.api.get<TaskCache>(
+      `v1/cache/${key}`
+    );
 
-    if (!url) {
+    if (!getUrl) {
       throw new Error('No cache URL found');
     }
 
-    const response = await axios.get(url, {
+    const response = await axios.get(getUrl, {
       responseType: 'stream',
     });
 
@@ -35,11 +31,11 @@ export class CloudStorage extends Storage {
     fileContent: Buffer | Uint8Array | Blob | string | Readable,
     key: string
   ): Promise<any> {
-    const {
-      data: [, url],
-    } = await this.api.get(`cache/${key}/urls`);
+    const { data: { putUrl } = {} } = await this.api.get<TaskCache>(
+      `v1/cache/${key}`
+    );
 
-    await axios.put(url, fileContent, {
+    await axios.put(putUrl, fileContent, {
       headers: {
         'Content-Type': 'application/octet-stream',
       },
@@ -49,7 +45,6 @@ export class CloudStorage extends Storage {
 
 export const storageProvider = {
   provide: Storage,
-  useFactory: (options: CloudRunnerOptions) =>
-    options?.apiUrl ? new CloudStorage(options.apiUrl) : new NoopStorage(),
-  deps: [OPTIONS],
+  useFactory: (api: Axios) => (api ? new CloudStorage(api) : new NoopStorage()),
+  deps: [[new Optional(), Axios]],
 };

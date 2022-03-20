@@ -1,23 +1,26 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Entity, PrimaryColumn } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { Environment } from '@runx/api/env';
+import { JobEntity, TaskEntity } from './entities';
 
-@Entity()
-class Enty {
-  @PrimaryColumn()
-  some: string;
+@Global()
+@Module({})
+export class DbModule {
+  static forRoot(): DynamicModule {
+    return {
+      module: DbModule,
+      imports: [
+        TypeOrmModule.forRootAsync({
+          useFactory: (config: ConfigService<Environment>) => ({
+            ...config.get('db'),
+            entities: [JobEntity, TaskEntity],
+          }),
+          inject: [ConfigService],
+        }),
+        TypeOrmModule.forFeature([JobEntity, TaskEntity]),
+      ],
+      exports: [TypeOrmModule],
+    };
+  }
 }
-
-@Module({
-  imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      database: 'postgres',
-      entities: [Enty],
-      synchronize: true,
-    }),
-  ],
-})
-export class DbModule {}

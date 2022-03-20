@@ -1,22 +1,25 @@
 import {
   LifeCycle as ILifeCycle,
+  TaskMetadata,
   TaskResult,
 } from '@nrwl/workspace/src/tasks-runner/life-cycle';
 import { Task } from '@nrwl/devkit';
 import { TaskStatus } from '@nrwl/workspace/src/tasks-runner/tasks-runner';
 
-export abstract class LifeCycle implements ILifeCycle {
-  abstract startCommand(): void;
+export abstract class LifeCycle
+  implements Omit<ILifeCycle, 'startTask' | 'endTask'>
+{
+  abstract startCommand?(): void;
 
-  abstract endCommand(): void;
+  abstract endCommand?(): void;
 
-  abstract scheduleTask(task: Task): void;
+  abstract scheduleTask?(task: Task): void;
 
-  abstract startTasks(task: Task[]): void;
+  abstract startTasks?(tasks: Task[]): void;
 
-  abstract endTasks(taskResults: TaskResult[]): void;
+  abstract endTasks?(taskResults: TaskResult[], metadata: TaskMetadata): void;
 
-  abstract printTaskTerminalOutput(
+  abstract printTaskTerminalOutput?(
     task: Task,
     cacheStatus: TaskStatus,
     output: string
