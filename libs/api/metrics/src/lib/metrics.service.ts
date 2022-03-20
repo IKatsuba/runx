@@ -80,7 +80,8 @@ export const metricsProvider: FactoryProvider = {
     savedTimeMetric: Summary<string>,
     config: ConfigService
   ) {
-    const { baseUrl } = config.get<Environment['prometheus']>('prometheus');
+    const { baseUrl } =
+      config.get<Environment['prometheus']>('prometheus') ?? {};
 
     return baseUrl
       ? new PromMetricsService(executionTimeMetric, savedTimeMetric, baseUrl)
