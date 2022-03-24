@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createCipheriv, createDecipheriv, scryptSync } from 'crypto';
-import { Roles } from '@runx/api/auth';
+import { Roles } from './roles';
 
 @Injectable()
 export class TokenService {
