@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CacheController } from './cache.controller';
 import { FileStorage } from '@runx/api/storage';
 import { Observable, of } from 'rxjs';
+import { TokenService } from '@runx/api/auth';
 
 class MockFileStorage extends FileStorage {
   getDownloadUrl(
@@ -23,6 +24,7 @@ describe('CacheController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CacheController],
       providers: [
+        TokenService,
         {
           provide: FileStorage,
           useClass: MockFileStorage,

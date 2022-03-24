@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { FileStorage } from '@runx/api/storage';
 import {
   forkJoin,
@@ -10,8 +10,10 @@ import {
   NEVER,
 } from 'rxjs';
 import { TaskCache } from '@runx/nx-runners/src/core/cache';
+import { AuthGuard } from '@runx/api/auth';
 
 @Controller('cache')
+@UseGuards(AuthGuard)
 export class CacheController {
   constructor(private fileStorage: FileStorage) {}
 

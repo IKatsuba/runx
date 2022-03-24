@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JobController } from './job.controller';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { JobEntity, TaskEntity } from '@runx/api/db';
+import { TokenService } from '@runx/api/auth';
 
 describe('JobController', () => {
   let controller: JobController;
@@ -10,6 +11,7 @@ describe('JobController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [JobController],
       providers: [
+        TokenService,
         {
           provide: getRepositoryToken(JobEntity),
           useValue: {

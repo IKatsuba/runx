@@ -7,7 +7,16 @@ import { Job, JobTask } from '../core/job';
 export const axiosProvider = {
   provide: Axios,
   useFactory: (options: CloudRunnerOptions) =>
-    options?.apiUrl ? axios.create({ baseURL: options.apiUrl }) : null,
+    options?.apiUrl
+      ? axios.create({
+          baseURL: options.apiUrl,
+          headers: {
+            ...(options?.accessToken
+              ? { authorization: `Bearer ${options.accessToken}` }
+              : {}),
+          },
+        })
+      : null,
   deps: [OPTIONS],
 };
 
