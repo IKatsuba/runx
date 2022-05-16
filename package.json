@@ -66,7 +66,7 @@
     "@types/jest": "27.0.2",
     "@types/node": "16.11.22",
     "@types/signale": "^1.4.2",
-    "@typescript-eslint/eslint-plugin": "5.10.2",
+    "@typescript-eslint/eslint-plugin": "5.23.0",
     "@typescript-eslint/parser": "5.10.2",
     "aws-sdk": "^2.1073.0",
     "axios": "0.26.1",
