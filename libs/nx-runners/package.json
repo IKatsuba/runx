@@ -18,7 +18,7 @@
   "homepage": "https://github.com/IKatsuba/runx/tree/main/libs/nx-runners",
   "dependencies": {
     "aws-sdk": "^2.1046.0",
-    "axios": "0.26.1",
+    "axios": "1.2.0",
     "injection-js": "^2.4.0",
     "reflect-metadata": "^0.1.13",
     "firebase-admin": "^10.0.1",
