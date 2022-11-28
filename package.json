@@ -55,7 +55,7 @@
     "@nrwl/cli": "13.8.4",
     "@nrwl/cypress": "13.8.4",
     "@nrwl/eslint-plugin-nx": "13.8.4",
-    "@nrwl/jest": "13.8.4",
+    "@nrwl/jest": "15.2.1",
     "@nrwl/linter": "13.8.4",
     "@nrwl/nest": "13.8.4",
     "@nrwl/node": "13.8.4",
