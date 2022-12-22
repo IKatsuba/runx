@@ -33,7 +33,7 @@
     "@tinkoff/utils": "^2.2.1",
     "@willsoto/nestjs-prometheus": "^4.6.0",
     "execa": "^5.1.1",
-    "firebase-admin": "^10.0.2",
+    "firebase-admin": "^11.4.1",
     "pg": "^8.7.1",
     "prom-client": "^14.0.1",
     "reflect-metadata": "^0.1.13",
