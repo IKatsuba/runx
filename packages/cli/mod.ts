@@ -1,8 +1,9 @@
 import { expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
-import { type CommandSegment, parseFullCommand } from './lib/parse-command.ts';
+import { parseFullCommand } from './lib/parse-command.ts';
 import { dirname, join } from '@std/path';
 import $ from '@david/dax';
+import { Graph, type PackageJson } from './lib/graph.ts';
 
 await new Command()
   .name('runx')
@@ -24,42 +25,73 @@ await new Command()
       })),
     );
 
-    const scripts = packageFiles.map((pkg) => ({
-      command: pkg.packageJson.scripts?.[command],
-      cwd: pkg.cwd,
-      name: pkg.packageJson.name,
-    }))
-      .filter(
-        ({ command, name }) =>
-          command !== undefined &&
-          (projects.length === 0 || projects.includes(name)),
-      );
+    // Create packages array for the Graph
+    const packages: PackageJson[] = packageFiles.map(({ packageJson }) =>
+      packageJson
+    );
 
-    if (scripts.length === 0) {
-      console.log(`No scripts found for command "${command}"`);
-      return;
+    // Build dependency graph
+    const graph = new Graph(packages);
+    await graph.buildGraph();
+
+    // Check for circular dependencies
+    const cycles = graph.findCircularDependencies();
+    if (cycles.length > 0) {
+      console.error('Circular dependencies detected:');
+      cycles.forEach((cycle) => {
+        console.error(cycle.join(' -> '));
+      });
+      Deno.exit(1);
     }
 
-    for (const script of scripts) {
-      const segments = parseFullCommand(script.command);
+    // Get topologically sorted package names
+    const executionOrder = graph.getTopologicalSort();
+
+    // Filter packages based on provided projects if any
+    const filteredOrder = projects.length > 0
+      ? executionOrder.filter((pkg) => projects.includes(pkg))
+      : executionOrder;
+
+    // Create a map of package names to their file info for easy lookup
+    const packageMap = new Map(
+      packageFiles.map((pkg) => [pkg.packageJson.name, pkg]),
+    );
+
+    // Execute scripts in order
+    for (const packageName of filteredOrder) {
+      const packageInfo = packageMap.get(packageName);
+      if (!packageInfo) continue;
+
+      const script = packageInfo.packageJson.scripts?.[command];
+      if (!script) continue;
+
+      console.log(`\nExecuting ${command} in ${packageName}...`);
+
+      const segments = parseFullCommand(script);
 
       for (const segment of segments) {
         if (typeof segment === 'string') {
           continue;
         }
 
-        const { env, command, args } = segment as CommandSegment;
-
-        const which = (await $.which(command))!;
-
+        const { env, command: cmd, args } = segment;
+        const which = (await $.which(cmd))!;
         const executable = join(Deno.cwd(), which);
 
-        await $`${executable} ${args.join(' ')}`.cwd(
-          script.cwd,
-        ).env({
-          ...Deno.env.toObject(),
-          ...(env ?? {}),
-        });
+        try {
+          await $`${executable} ${args.join(' ')}`.cwd(
+            packageInfo.cwd,
+          ).env({
+            ...Deno.env.toObject(),
+            ...(env ?? {}),
+          });
+        } catch (error) {
+          console.error(
+            `Failed to execute ${command} in ${packageName}:`,
+            error,
+          );
+          Deno.exit(1);
+        }
       }
     }
   })
