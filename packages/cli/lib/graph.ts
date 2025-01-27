@@ -3,6 +3,7 @@ export interface PackageJson {
   version: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  workspaces?: string[];
 }
 
 export interface DependencyNode {

@@ -14,12 +14,29 @@ await new Command()
     const startTime = performance.now();
     console.log(`\n> Starting execution of '${command}' command...`);
 
-    const packageFileSpecs = await Array.fromAsync(
-      expandGlob('**/package.json', {
-        root: Deno.cwd(),
-        exclude: ['**/node_modules/**'],
-      }),
-    );
+    // Read root package.json to get workspace patterns
+    const rootPackageJson = JSON.parse(
+      await Deno.readTextFile(join(Deno.cwd(), 'package.json')),
+    ) as PackageJson;
+
+    const workspacePatterns = rootPackageJson.workspaces || ['**/package.json'];
+
+    // Collect all package.json files from workspace patterns
+    const packageFileSpecs = await Promise.all(
+      workspacePatterns.map((pattern) =>
+        Array.fromAsync(
+          expandGlob(
+            pattern.endsWith('package.json')
+              ? pattern
+              : join(pattern, 'package.json'),
+            {
+              root: Deno.cwd(),
+              exclude: ['**/node_modules/**'],
+            },
+          ),
+        )
+      ),
+    ).then((results) => results.flat());
 
     const packageFiles = await Promise.all(
       packageFileSpecs.map(async (spec) => ({
