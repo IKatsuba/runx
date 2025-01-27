@@ -55,7 +55,7 @@ export function parseFullCommand(cmd: string) {
   );
   const segments: (CommandSegment | string)[] = [];
 
-  for (let part of parts) {
+  for (const part of parts) {
     if (['&&', '||', '&', '|'].includes(part)) {
       segments.push(part);
       continue;

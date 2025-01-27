@@ -35,8 +35,6 @@ await new Command()
           (projects.length === 0 || projects.includes(name)),
       );
 
-    console.log('scripts', scripts);
-
     if (scripts.length === 0) {
       console.log(`No scripts found for command "${command}"`);
       return;
