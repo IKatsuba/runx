@@ -7,7 +7,7 @@
       "command": "deno test packages/cli/**/*.spec.ts --allow-all"
     },
     "compile": {
-      "command": "deno compile --allow-read --allow-env --allow-run packages/cli/mod.ts"
+      "command": "deno compile --allow-read --allow-env --allow-run --output ./dist/cli packages/cli/mod.ts"
     }
   },
   "workspace": [

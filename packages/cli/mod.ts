@@ -11,6 +11,9 @@ await new Command()
   .version('v0.0.0-development')
   .arguments('<command> [...project]')
   .action(async (flags, command, ...projects: string[]) => {
+    const startTime = performance.now();
+    console.log(`\n> Starting execution of '${command}' command...`);
+
     const packageFileSpecs = await Array.fromAsync(
       expandGlob('**/package.json', {
         root: Deno.cwd(),
@@ -25,6 +28,13 @@ await new Command()
       })),
     );
 
+    const foundPackagesEndTime = performance.now();
+    console.log(
+      `✓ Found and parsed ${packageFiles.length} packages in ${
+        ((foundPackagesEndTime - startTime) / 1000).toFixed(2)
+      }s`,
+    );
+
     // Create packages array for the Graph
     const packages: PackageJson[] = packageFiles.map(({ packageJson }) =>
       packageJson
@@ -33,6 +43,13 @@ await new Command()
     // Build dependency graph
     const graph = new Graph(packages);
     await graph.buildGraph();
+
+    const graphEndTime = performance.now();
+    console.log(
+      `✓ Built dependency graph in ${
+        ((graphEndTime - foundPackagesEndTime) / 1000).toFixed(2)
+      }s`,
+    );
 
     // Check for circular dependencies
     const cycles = graph.findCircularDependencies();
@@ -57,15 +74,25 @@ await new Command()
       packageFiles.map((pkg) => [pkg.packageJson.name, pkg]),
     );
 
+    const topologicalSortEndTime = performance.now();
+    console.log(
+      `✓ Topologically sorted ${filteredOrder.length} packages in ${
+        ((topologicalSortEndTime - topologicalSortEndTime) / 1000).toFixed(
+          2,
+        )
+      }s`,
+    );
+
     // Execute scripts in order
     for (const packageName of filteredOrder) {
+      const packageStartTime = performance.now();
       const packageInfo = packageMap.get(packageName);
       if (!packageInfo) continue;
 
       const script = packageInfo.packageJson.scripts?.[command];
       if (!script) continue;
 
-      console.log(`\nExecuting ${command} in ${packageName}...`);
+      console.log(`\n> Executing ${command} in ${packageName}...`);
 
       const segments = parseFullCommand(script);
 
@@ -85,6 +112,10 @@ await new Command()
             ...Deno.env.toObject(),
             ...(env ?? {}),
           });
+
+          const packageDuration =
+            ((performance.now() - packageStartTime) / 1000).toFixed(2);
+          console.log(`✓ Finished ${packageName} in ${packageDuration}s`);
         } catch (error) {
           console.error(
             `Failed to execute ${command} in ${packageName}:`,
@@ -94,5 +125,8 @@ await new Command()
         }
       }
     }
+
+    const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n> Total execution time: ${totalDuration}s`);
   })
   .parse(Deno.args);
