@@ -21,3 +21,4 @@ jobs:
         with:
           deno-version: v2.1.1
       - run: deno fmt --check
+      - run: deno task test
