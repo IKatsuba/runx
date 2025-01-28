@@ -4,15 +4,26 @@ import { parseFullCommand } from './lib/parse-command.ts';
 import { dirname, join } from '@std/path';
 import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
+import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 
 await new Command()
   .name('runx')
   .description('Monorepo CLI')
   .version('v0.0.0-development')
-  .arguments('<command> [...project]')
-  .action(async (flags, command, ...projects: string[]) => {
+  .option(
+    '-a, --affected [base:string]',
+    'Run command only for affected packages',
+    (value) => value || value === '',
+  )
+  .arguments('<task-name> [...project]')
+  .action(async ({ affected }, taskName, ...projects: string[]) => {
     const startTime = performance.now();
-    console.log(`\n> Starting execution of '${command}' command...`);
+    console.log(`Running command ${taskName} with options:`, {
+      affected,
+      projects,
+    });
+
+    console.log(`\n> Starting execution of '${taskName}' command...`);
 
     // Read root package.json to get workspace patterns
     const rootPackageJson = JSON.parse(
@@ -81,10 +92,31 @@ await new Command()
     // Get topologically sorted package names
     const executionOrder = graph.getTopologicalSort();
 
-    // Filter packages based on provided projects if any
-    const filteredOrder = projects.length > 0
-      ? executionOrder.filter((pkg) => projects.includes(pkg))
-      : executionOrder;
+    let filteredOrder = executionOrder;
+
+    if (affected) {
+      const baseBranch = typeof affected === 'string' ? affected : 'main';
+      const changedFiles = await getChangedFiles(baseBranch);
+      const affectedPackages = getAffectedPackages(
+        changedFiles,
+        packageFiles,
+      );
+
+      // Get affected packages with their dependents
+      const allAffectedPackages = graph.getAffectedPackagesWithDependents(
+        affectedPackages,
+      );
+
+      console.log('\nAffected packages:');
+      console.log(Array.from(allAffectedPackages).join('\n'));
+
+      // Filter execution order to only include affected packages
+      filteredOrder = executionOrder.filter((pkg) =>
+        allAffectedPackages.has(pkg)
+      );
+    } else if (projects.length > 0) {
+      filteredOrder = executionOrder.filter((pkg) => projects.includes(pkg));
+    }
 
     // Create a map of package names to their file info for easy lookup
     const packageMap = new Map(
@@ -106,10 +138,10 @@ await new Command()
       const packageInfo = packageMap.get(packageName);
       if (!packageInfo) continue;
 
-      const script = packageInfo.packageJson.scripts?.[command];
+      const script = packageInfo.packageJson.scripts?.[taskName];
       if (!script) continue;
 
-      console.log(`\n> Executing ${command} in ${packageName}...`);
+      console.log(`\n> Executing ${taskName} in ${packageName}...`);
 
       const segments = parseFullCommand(script);
 
@@ -135,7 +167,7 @@ await new Command()
           console.log(`✓ Finished ${packageName} in ${packageDuration}s`);
         } catch (error) {
           console.error(
-            `Failed to execute ${command} in ${packageName}:`,
+            `Failed to execute ${taskName} in ${packageName}:`,
             error,
           );
           Deno.exit(1);

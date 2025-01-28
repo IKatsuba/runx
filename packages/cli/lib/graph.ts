@@ -130,4 +130,26 @@ export class Graph {
 
     return sorted;
   }
+
+  getAffectedPackagesWithDependents(
+    affectedPackages: Set<string>,
+  ): Set<string> {
+    const result = new Set<string>();
+
+    const findDependents = (packageName: string) => {
+      result.add(packageName);
+
+      this.nodes.forEach((node) => {
+        if (node.dependencies.some((dep) => dep.name === packageName)) {
+          findDependents(node.name);
+        }
+      });
+    };
+
+    affectedPackages.forEach((pkg) => {
+      findDependents(pkg);
+    });
+
+    return result;
+  }
 }
