@@ -8,6 +8,9 @@ A lightning monorepo task runner written in Deno. `runx` helps you manage and
 execute tasks across multiple packages in your monorepo with minimal
 configuration and maximum efficiency.
 
+> **Note**: Supports only npm workspaces for now. Other package managers are
+> planned.
+
 ## 🌟 Key Features
 
 - **Zero Configuration**: Works out of the box with your existing monorepo
@@ -25,7 +28,9 @@ configuration and maximum efficiency.
 
 ## 📦 Installation
 
-> TODO. Stay tuned!
+```bash
+deno install --allow-read --allow-env --allow-run -g -N -R -n runx jsr:@runx/cli
+```
 
 ## 🚀 Quick Start
 
