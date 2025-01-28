@@ -1,7 +1,8 @@
 {
   "name": "@runx/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "exports": "./mod.ts",
+  "license": "MIT",
   "imports": {
     "@std/fs": "jsr:@std/fs@1.0.10",
     "@cliffy/command": "jsr:@cliffy/command@1.0.0-rc.7",

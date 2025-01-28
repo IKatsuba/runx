@@ -9,7 +9,7 @@ import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 await new Command()
   .name('runx')
   .description('Monorepo CLI')
-  .version('v0.0.0-development')
+  .version('v0.1.0')
   .option(
     '-a, --affected [base:string]',
     'Run command only for affected packages',
