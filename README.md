@@ -26,6 +26,66 @@ configuration and maximum efficiency.
   - Target specific packages
   - Execute only in affected packages (Git-aware)
 
+## 🗺️ Roadmap
+
+Current status of essential monorepo features:
+
+✅ **Dependency Management**
+
+- Smart dependency graph building
+- Circular dependency detection
+- Proper topological ordering
+
+✅ **Change Impact Analysis**
+
+- Git-aware change detection
+- Affected package detection with dependents
+
+✅ **Modularity and Isolation**
+
+- Workspace pattern support
+- Package-level script execution
+- Independent package management
+
+🚧 **Parallel Task Execution**
+
+- Topologically ordered execution
+- Proper dependency order respect
+
+🚧 **Incremental Builds**
+
+- Smart rebuilding of changed packages
+- Dependency-aware build process
+
+🚧 **Build Caching**
+
+- Cache build artifacts
+- Reuse previous builds when possible
+
+🚧 **Versioning and Release Management**
+
+- Automated version bumping
+- Changelog generation
+- Release coordination
+
+🚧 **Unified Tools and Processes**
+
+- Standardized build process
+- Consistent development environment
+- Shared configurations
+
+🚧 **Scalability**
+
+- Large repository support
+- Performance optimizations
+- Resource management
+
+🚧 **Access Control and Permissions**
+
+- Package-level access control
+- Security policies
+- Role-based permissions
+
 ## 📦 Installation
 
 ```bash
