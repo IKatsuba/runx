@@ -1,7 +1,7 @@
 import { crypto } from '@std/crypto';
 import { join } from '@std/path';
 import { ensureDir, exists, expandGlob } from '@std/fs';
-import { Graph, type PackageJson } from './graph.ts';
+import type { Graph, PackageJson } from './graph.ts';
 
 interface TaskCache {
   hash: string;
@@ -10,6 +10,7 @@ interface TaskCache {
   exitCode: number;
 }
 
+// Cache for package hashes during single run
 export async function calculateTaskHash(
   packageName: string,
   taskName: string,
@@ -20,8 +21,9 @@ export async function calculateTaskHash(
   graph?: Graph,
   packageMap?: Map<string, { packageJson: PackageJson; cwd: string }>,
 ): Promise<string> {
-  console.log(`Calculating hash for ${packageName} ${taskName}`);
+  // Create a cache key that includes all inputs that might affect the hash
 
+  console.log(`Calculating hash for ${packageName} ${taskName}`);
   console.log(`Package name: ${packageName}`);
   console.log(`Task name: ${taskName}`);
 

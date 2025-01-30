@@ -14,12 +14,15 @@ export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
     const untrackedOutput = await $`git ls-files --others --exclude-standard`
       .text();
     const modifiedOutput = await $`git diff --name-only`.text();
+    // Get staged files
+    const stagedOutput = await $`git diff --name-only --cached`.text();
 
     // Combine all changes and remove duplicates
     const allFiles = [
       ...diffOutput.split('\n'),
       ...untrackedOutput.split('\n'),
       ...modifiedOutput.split('\n'),
+      ...stagedOutput.split('\n'),
     ];
 
     return [...new Set(allFiles)]

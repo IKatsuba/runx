@@ -14,15 +14,17 @@ await new Command()
   .option(
     '-a, --affected [base:string]',
     'Run command only for affected packages',
-    {
-      value: (value) => value || 'main',
-      default: 'main',
-    },
+    (value) => value || value === '',
+  )
+  .option(
+    '--cache',
+    'Enable task caching',
+    { default: false },
   )
   .option(
     '--no-cache',
     'Disable task caching',
-    { default: true },
+    { hidden: true },
   )
   .arguments('<task-name> [...project]')
   .action(async ({ affected, cache }, taskName, ...projects: string[]) => {
