@@ -24,6 +24,10 @@ export class Graph {
     });
   }
 
+  getNode(packageName: string): DependencyNode | undefined {
+    return this.nodes.get(packageName);
+  }
+
   async buildGraph(): Promise<DependencyNode[]> {
     this.nodes.clear();
 

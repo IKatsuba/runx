@@ -196,10 +196,16 @@ await new Command()
               files.map((file) => file.path.replace(Deno.cwd() + '/', ''))
             );
 
-            const hash = await calculateTaskHash(packageName, taskName, {
-              files: packageFiles,
-              packageJson: packageInfo.packageJson,
-            });
+            const hash = await calculateTaskHash(
+              packageName,
+              taskName,
+              {
+                files: packageFiles,
+                packageJson: packageInfo.packageJson,
+              },
+              graph,
+              packageMap,
+            );
 
             const cache = await cacheManager.getCache(hash);
 

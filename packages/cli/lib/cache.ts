@@ -1,6 +1,7 @@
 import { crypto } from '@std/crypto';
 import { join } from '@std/path';
-import { ensureDir } from '@std/fs';
+import { ensureDir, exists, expandGlob } from '@std/fs';
+import { Graph, type PackageJson } from './graph.ts';
 
 interface TaskCache {
   hash: string;
@@ -14,20 +15,71 @@ export async function calculateTaskHash(
   taskName: string,
   dependencies: {
     files: string[];
-    packageJson: Record<string, unknown>;
+    packageJson: PackageJson;
   },
+  graph?: Graph,
+  packageMap?: Map<string, { packageJson: PackageJson; cwd: string }>,
 ): Promise<string> {
   console.log(`Calculating hash for ${packageName} ${taskName}`);
 
   console.log(`Package name: ${packageName}`);
   console.log(`Task name: ${taskName}`);
-  console.log(`Dependencies: ${JSON.stringify(dependencies)}`);
+
+  // Get all local dependencies from the graph
+  const localDependencyHashes: string[] = [];
+  if (graph && packageMap) {
+    const node = graph.getNode(packageName);
+    if (node) {
+      for (const dep of node.dependencies) {
+        if (dep.isLocal) {
+          const depInfo = packageMap.get(dep.name);
+          if (depInfo) {
+            // Get all files for the dependency
+            const exclude = [];
+            const gitignorePath = join(Deno.cwd(), '.gitignore');
+
+            if (await exists(gitignorePath)) {
+              const gitignore = await Deno.readTextFile(gitignorePath);
+              exclude.push(
+                ...gitignore.split('\n').map((file) => file.trim()).filter(
+                  Boolean,
+                ),
+              );
+            }
+
+            const depFiles = await Array.fromAsync(
+              expandGlob('**/*', {
+                root: depInfo.cwd,
+                exclude,
+              }),
+            ).then((files) =>
+              files.map((file) => file.path.replace(Deno.cwd() + '/', ''))
+            );
+
+            // Calculate hash for each local dependency with its own files and package.json
+            const depHash = await calculateTaskHash(
+              dep.name,
+              taskName,
+              {
+                files: depFiles,
+                packageJson: depInfo.packageJson,
+              },
+              graph,
+              packageMap,
+            );
+            localDependencyHashes.push(depHash);
+          }
+        }
+      }
+    }
+  }
 
   // Create a string that includes all the inputs that affect the task
   const inputString = JSON.stringify({
     packageName,
     taskName,
     dependencies,
+    localDependencyHashes,
   });
 
   // Calculate SHA-256 hash
