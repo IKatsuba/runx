@@ -352,7 +352,7 @@ export async function calculateTaskHash(
   return hash;
 }
 
-async function hashify(input: string): Promise<string> {
+export async function hashify(input: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(input),
