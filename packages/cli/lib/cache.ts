@@ -149,13 +149,13 @@ export class TaskCacheManager {
         }),
       );
 
-      for (const file of files) {
+      await Promise.all(files.map(async (file) => {
         const relativePath = file.path.replace(cwd, '');
         const targetPath = join(artifactDir, relativePath);
         await ensureDir(dirname(targetPath));
         await copy(file.path, targetPath, { overwrite: true });
         artifact.paths.push(relativePath);
-      }
+      }));
     }
 
     await Deno.writeTextFile(
@@ -184,12 +184,12 @@ export class TaskCacheManager {
     const artifactDir = this.getArtifactPath(hash);
     await ensureDir(targetDir);
 
-    for (const fileName of artifacts.paths) {
+    await Promise.all(artifacts.paths.map(async (fileName) => {
       const sourcePath = join(artifactDir, fileName);
       const targetPath = join(targetDir, fileName);
       await ensureDir(dirname(targetPath));
       await copy(sourcePath, targetPath, { overwrite: true });
-    }
+    }));
 
     return true;
   }
