@@ -89,7 +89,7 @@ Current status of essential monorepo features:
 ## 📦 Installation
 
 ```bash
-deno install --allow-read --allow-env --allow-run -g -N -R -n runx jsr:@runx/cli
+deno install --allow-sys --allow-write --allow-read --allow-env --allow-run -g -N -R -f -n runx jsr:@runx/cli@0.2.0
 ```
 
 ## 🚀 Quick Start
