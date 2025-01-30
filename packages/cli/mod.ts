@@ -13,7 +13,7 @@ const _cacheManager = await initCacheManager(Deno.cwd());
 await new Command()
   .name('runx')
   .description('Monorepo CLI')
-  .version('v0.1.0')
+  .version('v0.2.0')
   .option(
     '-a, --affected [base:string]',
     'Run command only for affected packages',
