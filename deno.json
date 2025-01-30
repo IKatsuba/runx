@@ -7,10 +7,10 @@
       "command": "deno test packages/cli/**/*.spec.ts --allow-all"
     },
     "compile": {
-      "command": "deno compile --allow-write --allow-read --allow-env --allow-run --output ./dist/cli packages/cli/mod.ts"
+      "command": "deno compile --allow-sys --allow-write --allow-read --allow-env --allow-run --output ./dist/cli packages/cli/mod.ts"
     },
     "install": {
-      "command": "deno install --allow-write --allow-read --allow-env --allow-run -g -N -R -f -n runx jsr:@runx/cli"
+      "command": "deno install --allow-sys --allow-write --allow-read --allow-env --allow-run -g -N -R -f -n runx jsr:@runx/cli"
     }
   },
   "workspace": [

@@ -1,5 +1,5 @@
 import { crypto } from '@std/crypto';
-import { info } from './colors.ts';
+import { logger } from './logger.ts';
 import { dirname, join } from '@std/path';
 import { copy, ensureDir, exists, expandGlob } from '@std/fs';
 import type { Graph, PackageJson } from './graph.ts';
@@ -251,16 +251,14 @@ export async function calculateTaskHash(
   );
 
   if (isAffected) {
-    console.log(
-      info('[INFO]'),
+    logger.info(
       `Skipping cache for affected package ${packageName}`,
     );
   } else {
     // Check memory cache first
     const memCachedHash = hashCache.get(cacheKey);
     if (memCachedHash) {
-      console.log(
-        info('[INFO]'),
+      logger.info(
         `Using memory cached hash for ${packageName} ${taskName}: ${memCachedHash}`,
       );
       return memCachedHash;
@@ -269,8 +267,7 @@ export async function calculateTaskHash(
     // Check disk cache
     const diskCache = await globalCacheManager.getHashCache(cacheKey);
     if (diskCache) {
-      console.log(
-        info('[INFO]'),
+      logger.info(
         `Using disk cached hash for ${packageName} ${taskName}: ${diskCache.hash}`,
       );
       // Store in memory cache for future use
@@ -279,12 +276,11 @@ export async function calculateTaskHash(
     }
   }
 
-  console.log(
-    info('[INFO]'),
+  logger.info(
     `Calculating hash for ${packageName} ${taskName}`,
   );
-  console.log(info('[INFO]'), `Package name: ${packageName}`);
-  console.log(info('[INFO]'), `Task name: ${taskName}`);
+  logger.info(`Package name: ${packageName}`);
+  logger.info(`Task name: ${taskName}`);
 
   // Get all local dependencies from the graph
   const localDependencyHashes: string[] = [];
@@ -347,8 +343,7 @@ export async function calculateTaskHash(
   // Convert to hex string
   const hash = await hashify(inputString);
 
-  console.log(
-    info('[INFO]'),
+  logger.info(
     `Hash for ${packageName} ${taskName}: ${hash}`,
   );
 

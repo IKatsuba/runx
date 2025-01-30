@@ -1,7 +1,6 @@
 import $ from '@david/dax';
 import { join } from '@std/path';
-import { error } from './colors.ts';
-
+import { logger } from './logger.ts';
 export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
   try {
     // Get the merge base commit
@@ -30,8 +29,7 @@ export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
       .filter(Boolean)
       .map((file) => file.trim());
   } catch (err) {
-    console.error(
-      error('[ERROR]'),
+    logger.error(
       'Error getting changed files:',
       err instanceof Error ? err.message : String(err),
     );

@@ -6,7 +6,7 @@ import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 import { calculateTaskHash, hashify, initCacheManager } from './lib/cache.ts';
-import { debug, error, info, success, warn } from './lib/colors.ts';
+import { logger } from './lib/logger.ts';
 
 const _cacheManager = await initCacheManager(Deno.cwd());
 
@@ -44,17 +44,14 @@ await new Command()
       ...projects: string[]
     ) => {
       const startTime = performance.now();
-      console.log(info('[INFO]'), `Running command ${taskName} with options:`, {
+      logger.info(`Running command ${taskName} with options:`, {
         affected,
         projects,
         cache,
         concurrency,
       });
 
-      console.log(
-        info('[INFO]'),
-        `\n> Starting execution of '${taskName}' command...`,
-      );
+      logger.info(`> Starting execution of '${taskName}' command...`);
 
       // Read root package.json to get workspace patterns
       const rootPackageJson = JSON.parse(
@@ -77,9 +74,8 @@ await new Command()
       );
 
       const foundPackagesEndTime = performance.now();
-      console.log(
-        success('[SUCCESS]'),
-        `✓ Found and parsed ${packageFiles.length} packages in ${
+      logger.success(
+        `Found and parsed ${packageFiles.length} packages in ${
           ((foundPackagesEndTime - startTime) / 1000).toFixed(2)
         }s`,
       );
@@ -94,9 +90,8 @@ await new Command()
       await graph.buildGraph();
 
       const graphEndTime = performance.now();
-      console.log(
-        success('[SUCCESS]'),
-        `✓ Built dependency graph in ${
+      logger.success(
+        `Built dependency graph in ${
           ((graphEndTime - foundPackagesEndTime) / 1000).toFixed(2)
         }s`,
       );
@@ -104,9 +99,9 @@ await new Command()
       // Check for circular dependencies
       const cycles = graph.findCircularDependencies();
       if (cycles.length > 0) {
-        console.error(error('[ERROR]'), 'Circular dependencies detected:');
+        logger.error('Circular dependencies detected:');
         cycles.forEach((cycle) => {
-          console.error(error('[ERROR]'), cycle.join(' -> '));
+          logger.error(cycle.join(' -> '));
         });
         Deno.exit(1);
       }
@@ -128,8 +123,9 @@ await new Command()
         affectedPackages,
       );
 
-      console.log(info('[INFO]'), '\nAffected packages:');
-      console.log(Array.from(allAffectedPackages).join('\n'));
+      logger.info(
+        `Affected packages: ${Array.from(allAffectedPackages).join(', ')}`,
+      );
 
       if (affected) {
         // Filter execution order to only include affected packages
@@ -146,9 +142,8 @@ await new Command()
       );
 
       const topologicalSortEndTime = performance.now();
-      console.log(
-        success('[SUCCESS]'),
-        `✓ Topologically sorted ${filteredOrder.length} packages in ${
+      logger.success(
+        `Topologically sorted ${filteredOrder.length} packages in ${
           ((topologicalSortEndTime - topologicalSortEndTime) / 1000).toFixed(
             2,
           )
@@ -158,7 +153,7 @@ await new Command()
       // Group packages by their dependency level for parallel execution
       const levels = graph.getLevels(filteredOrder);
 
-      console.log(debug('[DEBUG]'), levels);
+      logger.debug(levels);
       // Execute packages level by level with concurrency limit
       for (const level of levels) {
         const levelTasks = level.filter((packageName: string) => {
@@ -168,10 +163,7 @@ await new Command()
 
         if (levelTasks.length === 0) continue;
 
-        console.log(
-          info('[INFO]'),
-          `\n> Executing level with ${levelTasks.length} packages...`,
-        );
+        logger.info(`Executing level with ${levelTasks.length} packages...`);
 
         const runningTasks: Array<{
           promise: Promise<void>;
@@ -184,8 +176,7 @@ await new Command()
           // Wait if we've reached the concurrency limit
           const activeTasks = runningTasks.filter((t) => !t.done);
           if (activeTasks.length >= (concurrency as number)) {
-            console.log(
-              info('[INFO]'),
+            logger.info(
               `Waiting for tasks to finish. Active tasks: ${
                 activeTasks.map((t) => t.name).join(', ')
               }`,
@@ -214,10 +205,7 @@ await new Command()
           const taskPromise = {
             promise: (async () => {
               try {
-                console.log(
-                  info('[INFO]'),
-                  `\n> Executing ${taskName} in ${packageName}...`,
-                );
+                logger.info(`> Executing ${taskName} in ${packageName}...`);
                 const segments = parseFullCommand(script);
 
                 for (const segment of segments) {
@@ -268,19 +256,17 @@ await new Command()
                       ?.[taskName]?.artifacts as string[] | undefined;
 
                     if (cache) {
-                      console.log(
-                        info('[INFO]'),
+                      logger.info(
                         `✓ Using cached result for ${packageName} (hash: ${hash})`,
                       );
-                      console.log(cache.output);
+                      logger.info(cache.output);
 
                       const restored = await cacheManager.restoreArtifacts(
                         hash,
                         packageInfo.cwd,
                       );
                       if (restored) {
-                        console.log(
-                          success('[SUCCESS]'),
+                        logger.success(
                           `✓ Restored artifacts for ${packageName}`,
                         );
                       }
@@ -300,7 +286,7 @@ await new Command()
                       ...(env ?? {}),
                     }).stdout('inheritPiped');
 
-                    console.log(result.stdout);
+                    logger.info(result.stdout);
 
                     await cacheManager.saveCache(
                       hash,
@@ -320,13 +306,11 @@ await new Command()
                             timestamp: Date.now(),
                           },
                         );
-                        console.log(
-                          success('[SUCCESS]'),
-                          `✓ Cached artifacts for ${packageName}`,
+                        logger.success(
+                          `Cached artifacts for ${packageName}`,
                         );
                       } catch (error) {
-                        console.warn(
-                          warn('[WARN]'),
+                        logger.warn(
                           `Failed to cache artifacts for ${packageName}:`,
                           error,
                         );
@@ -350,8 +334,7 @@ await new Command()
 
                 const packageDuration =
                   ((performance.now() - packageStartTime) / 1000).toFixed(2);
-                console.log(
-                  success('[SUCCESS]'),
+                logger.success(
                   `✓ Finished ${packageName} in ${packageDuration}s`,
                 );
               } catch (err) {
@@ -373,10 +356,9 @@ await new Command()
         try {
           await Promise.all(runningTasks.map((t) => t.promise));
         } catch (err) {
-          console.error(error('[ERROR]'), 'One or more tasks failed:');
+          logger.error('One or more tasks failed:');
           for (const err of errors) {
-            console.error(
-              error('[ERROR]'),
+            logger.error(
               err instanceof Error ? err.message : String(err),
             );
           }
@@ -385,10 +367,7 @@ await new Command()
       }
 
       const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
-      console.log(
-        info('[INFO]'),
-        `\n> Total execution time: ${totalDuration}s`,
-      );
+      logger.info(`Total execution time: ${totalDuration}s`);
     },
   )
   .parse(Deno.args);
