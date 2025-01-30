@@ -1,10 +1,11 @@
-import { expandGlob } from '@std/fs';
+import { exists, expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
 import { parseFullCommand } from './lib/parse-command.ts';
 import { dirname, join } from '@std/path';
 import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
+import { calculateTaskHash, TaskCacheManager } from './lib/cache.ts';
 
 await new Command()
   .name('runx')
@@ -13,14 +14,23 @@ await new Command()
   .option(
     '-a, --affected [base:string]',
     'Run command only for affected packages',
-    (value) => value || value === '',
+    {
+      value: (value) => value || 'main',
+      default: 'main',
+    },
+  )
+  .option(
+    '--no-cache',
+    'Disable task caching',
+    { default: true },
   )
   .arguments('<task-name> [...project]')
-  .action(async ({ affected }, taskName, ...projects: string[]) => {
+  .action(async ({ affected, cache }, taskName, ...projects: string[]) => {
     const startTime = performance.now();
     console.log(`Running command ${taskName} with options:`, {
       affected,
       projects,
+      cache,
     });
 
     console.log(`\n> Starting execution of '${taskName}' command...`);
@@ -31,6 +41,12 @@ await new Command()
     ) as PackageJson;
 
     const workspacePatterns = rootPackageJson.workspaces || ['**/package.json'];
+
+    // Initialize cache manager if caching is enabled
+    const cacheManager = cache ? new TaskCacheManager(Deno.cwd()) : null;
+    if (cacheManager) {
+      await cacheManager.init();
+    }
 
     // Collect all package.json files from workspace patterns
     const packageFileSpecs = await Promise.all(
@@ -155,12 +171,73 @@ await new Command()
         const executable = join(Deno.cwd(), which);
 
         try {
-          await $`${executable} ${args.join(' ')}`.cwd(
-            packageInfo.cwd,
-          ).env({
-            ...Deno.env.toObject(),
-            ...(env ?? {}),
-          });
+          // If caching is enabled, try to use cached result
+          if (cacheManager) {
+            const exclude = [];
+
+            const gitignorePath = join(Deno.cwd(), '.gitignore');
+
+            if (await exists(gitignorePath)) {
+              const gitignore = await Deno.readTextFile(gitignorePath);
+              exclude.push(
+                ...gitignore.split('\n').map((file) => file.trim()).filter(
+                  Boolean,
+                ),
+              );
+            }
+
+            // Get all files in the package directory
+            const packageFiles = await Array.fromAsync(
+              expandGlob('**/*', {
+                root: packageInfo.cwd,
+                exclude,
+              }),
+            ).then((files) =>
+              files.map((file) => file.path.replace(Deno.cwd() + '/', ''))
+            );
+
+            const hash = await calculateTaskHash(packageName, taskName, {
+              files: packageFiles,
+              packageJson: packageInfo.packageJson,
+            });
+
+            const cache = await cacheManager.getCache(hash);
+
+            if (cache) {
+              console.log(
+                `✓ Using cached result for ${packageName} (hash: ${hash})`,
+              );
+              console.log(cache.output);
+              if (cache.exitCode !== 0) {
+                throw new Error(`Task failed with exit code ${cache.exitCode}`);
+              }
+              continue;
+            }
+
+            const result = await $`${executable} ${args.join(' ')}`.cwd(
+              packageInfo.cwd,
+            ).env({
+              ...Deno.env.toObject(),
+              ...(env ?? {}),
+            }).stdout('inheritPiped');
+
+            console.log(result.stdout);
+
+            // Save the result to cache
+            await cacheManager.saveCache(hash, result.stdout, result.code);
+
+            if (result.code !== 0) {
+              throw new Error(`Task failed with exit code ${result.code}`);
+            }
+          } else {
+            // Run without caching
+            await $`${executable} ${args.join(' ')}`.cwd(
+              packageInfo.cwd,
+            ).env({
+              ...Deno.env.toObject(),
+              ...(env ?? {}),
+            });
+          }
 
           const packageDuration =
             ((performance.now() - packageStartTime) / 1000).toFixed(2);

@@ -35,9 +35,6 @@ export function getAffectedPackages(
   changedFiles: string[],
   packages: { packageJson: { name: string }; cwd: string }[],
 ): Set<string> {
-  console.log('changedFiles', changedFiles);
-  console.log('packages', packages);
-
   const affectedPackages = new Set<string>();
 
   for (const pkg of packages) {
