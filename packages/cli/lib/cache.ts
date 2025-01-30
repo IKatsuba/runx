@@ -31,8 +31,16 @@ interface TaskArtifact {
   metadata?: Record<string, unknown>;
 }
 
+interface FileSearchCache {
+  timestamp: number;
+  files: string[];
+}
+
 // Cache for package hashes during single run
 const hashCache = new Map<string, string>();
+
+// Cache for file search results during single run
+const fileSearchCache = new Map<string, FileSearchCache>();
 
 export class TaskCacheManager {
   private cacheDir: string;
@@ -170,7 +178,7 @@ export class TaskCacheManager {
   async restoreArtifacts(hash: string, targetDir: string): Promise<boolean> {
     const artifacts = await this.getArtifacts(hash);
     if (!artifacts) {
-      return false;
+      return true;
     }
 
     const artifactDir = this.getArtifactPath(hash);
@@ -185,19 +193,35 @@ export class TaskCacheManager {
 
     return true;
   }
+
+  saveFileSearchCache(cacheKey: string, files: string[]): void {
+    fileSearchCache.set(cacheKey, {
+      timestamp: Date.now(),
+      files,
+    });
+  }
+
+  getFileSearchCache(cacheKey: string): string[] | null {
+    const cache = fileSearchCache.get(cacheKey);
+    if (!cache) {
+      return null;
+    }
+
+    return cache.files;
+  }
 }
 
 // Global instance of TaskCacheManager
-export let cacheManager: TaskCacheManager | null = null;
+export let globalCacheManager: TaskCacheManager | null = null;
 
 export async function initCacheManager(
   workspaceRoot: string,
 ): Promise<TaskCacheManager> {
-  cacheManager = new TaskCacheManager(workspaceRoot);
+  globalCacheManager = new TaskCacheManager(workspaceRoot);
 
-  await cacheManager.init();
+  await globalCacheManager.init();
 
-  return cacheManager;
+  return globalCacheManager;
 }
 
 export async function calculateTaskHash(
@@ -211,7 +235,7 @@ export async function calculateTaskHash(
   packageMap?: Map<string, { packageJson: PackageJson; cwd: string }>,
   affectedPackages?: Set<string>,
 ): Promise<string> {
-  if (!cacheManager) {
+  if (!globalCacheManager) {
     throw new Error(
       'Cache manager not initialized. Call initCacheManager first.',
     );
@@ -238,7 +262,7 @@ export async function calculateTaskHash(
     }
 
     // Check disk cache
-    const diskCache = await cacheManager.getHashCache(cacheKey);
+    const diskCache = await globalCacheManager.getHashCache(cacheKey);
     if (diskCache) {
       console.log(
         `Using disk cached hash for ${packageName} ${taskName}: ${diskCache.hash}`,
@@ -318,7 +342,7 @@ export async function calculateTaskHash(
 
   // Store the calculated hash in both memory and disk cache
   hashCache.set(cacheKey, hash);
-  await cacheManager.saveHashCache(cacheKey, hash, {
+  await globalCacheManager.saveHashCache(cacheKey, hash, {
     packageName,
     taskName,
     dependencies,

@@ -7,9 +7,9 @@ export interface PackageJson {
   devDependencies?: Record<string, string>;
   scripts?: Record<string, string>;
   runx?: {
-    artifacts?: {
+    tasks?: {
       [taskName: string]: {
-        paths: string[];
+        artifacts: string[];
       };
     };
   };
