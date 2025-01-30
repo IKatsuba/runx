@@ -25,6 +25,8 @@ export interface DependencyNode {
 export class Graph {
   private nodes: Map<string, DependencyNode> = new Map();
   private localPackages: Map<string, PackageJson> = new Map();
+  private edges: Map<string, Set<string>> = new Map();
+  private reverseEdges: Map<string, Set<string>> = new Map();
 
   constructor(packages: PackageJson[]) {
     // Инициализируем карту локальных пакетов
@@ -68,6 +70,14 @@ export class Graph {
     // Сохраняем узел в кэш
     this.nodes.set(nodeKey, node);
 
+    // Инициализируем edges для этого пакета
+    if (!this.edges.has(nodeKey)) {
+      this.edges.set(nodeKey, new Set());
+    }
+    if (!this.reverseEdges.has(nodeKey)) {
+      this.reverseEdges.set(nodeKey, new Set());
+    }
+
     // Обрабатываем все зависимости
     const allDependencies = {
       ...(packageJson.dependencies || {}),
@@ -82,8 +92,14 @@ export class Graph {
         // Если это локальный пакет, создаем для него узел
         const childNode = await this.createNode(localDep);
         node.dependencies.push(childNode);
+
+        // Добавляем ребро в граф
+        this.edges.get(nodeKey)!.add(depName);
+        if (!this.reverseEdges.has(depName)) {
+          this.reverseEdges.set(depName, new Set());
+        }
+        this.reverseEdges.get(depName)!.add(nodeKey);
       }
-      // Внешние зависимости можно пропустить или обработать отдельно
     }
 
     return node;
@@ -164,5 +180,60 @@ export class Graph {
     });
 
     return result;
+  }
+
+  /**
+   * Groups packages into levels based on their dependencies.
+   * Packages in the same level can be executed in parallel.
+   */
+  getLevels(packages: string[]): string[][] {
+    const levels: string[][] = [];
+    const visited = new Set<string>();
+    const packageSet = new Set(packages);
+
+    // Helper function to get the maximum level of dependencies
+    const getMaxDependencyLevel = (pkg: string): number => {
+      if (visited.has(pkg)) {
+        return levels.findIndex((level) => level.includes(pkg));
+      }
+
+      const dependencies = this.edges.get(pkg) || new Set();
+      if (dependencies.size === 0) return 0;
+
+      let maxLevel = 0;
+      for (const dep of dependencies) {
+        if (packageSet.has(dep)) {
+          const depLevel = getMaxDependencyLevel(dep);
+          maxLevel = Math.max(maxLevel, depLevel + 1);
+        }
+      }
+      return maxLevel;
+    };
+
+    // First, process all packages with no dependencies
+    const noDeps = packages.filter((pkg) => {
+      const deps = this.edges.get(pkg) || new Set();
+      return deps.size === 0 || ![...deps].some((dep) => packageSet.has(dep));
+    });
+
+    if (noDeps.length > 0) {
+      levels[0] = noDeps;
+      noDeps.forEach((pkg) => visited.add(pkg));
+    }
+
+    // Then process remaining packages
+    for (const pkg of packages) {
+      if (visited.has(pkg)) continue;
+
+      const level = getMaxDependencyLevel(pkg);
+      if (!levels[level]) {
+        levels[level] = [];
+      }
+      levels[level].push(pkg);
+      visited.add(pkg);
+    }
+
+    // Remove empty levels and return
+    return levels.filter((level) => level.length > 0);
   }
 }
