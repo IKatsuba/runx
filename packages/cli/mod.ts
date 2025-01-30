@@ -5,7 +5,7 @@ import { dirname, join } from '@std/path';
 import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
-import { calculateTaskHash, TaskCacheManager } from './lib/cache.ts';
+import { calculateTaskHash, initCacheManager } from './lib/cache.ts';
 
 await new Command()
   .name('runx')
@@ -14,7 +14,10 @@ await new Command()
   .option(
     '-a, --affected [base:string]',
     'Run command only for affected packages',
-    (value) => value || value === '',
+    {
+      value: (value) => value || value === '',
+      default: false,
+    },
   )
   .option(
     '--cache',
@@ -45,7 +48,8 @@ await new Command()
     const workspacePatterns = rootPackageJson.workspaces || ['**/package.json'];
 
     // Initialize cache manager if caching is enabled
-    const cacheManager = cache ? new TaskCacheManager(Deno.cwd()) : null;
+    const _cacheManager = await initCacheManager(Deno.cwd());
+    const cacheManager = cache ? _cacheManager : null;
     if (cacheManager) {
       await cacheManager.init();
     }
@@ -112,22 +116,22 @@ await new Command()
 
     let filteredOrder = executionOrder;
 
+    const baseBranch = typeof affected === 'string' ? affected : 'main';
+    const changedFiles = await getChangedFiles(baseBranch);
+    const affectedPackages = getAffectedPackages(
+      changedFiles,
+      packageFiles,
+    );
+
+    // Get affected packages with their dependents
+    const allAffectedPackages = graph.getAffectedPackagesWithDependents(
+      affectedPackages,
+    );
+
+    console.log('\nAffected packages:');
+    console.log(Array.from(allAffectedPackages).join('\n'));
+
     if (affected) {
-      const baseBranch = typeof affected === 'string' ? affected : 'main';
-      const changedFiles = await getChangedFiles(baseBranch);
-      const affectedPackages = getAffectedPackages(
-        changedFiles,
-        packageFiles,
-      );
-
-      // Get affected packages with their dependents
-      const allAffectedPackages = graph.getAffectedPackagesWithDependents(
-        affectedPackages,
-      );
-
-      console.log('\nAffected packages:');
-      console.log(Array.from(allAffectedPackages).join('\n'));
-
       // Filter execution order to only include affected packages
       filteredOrder = executionOrder.filter((pkg) =>
         allAffectedPackages.has(pkg)
@@ -207,15 +211,29 @@ await new Command()
               },
               graph,
               packageMap,
+              allAffectedPackages,
             );
 
             const cache = await cacheManager.getCache(hash);
+            const artifactConfig = packageInfo.packageJson.runx?.tasks
+              ?.[taskName]?.artifacts as string[];
 
-            if (cache) {
+            // Try to restore artifacts if they exist
+            if (cache && artifactConfig) {
               console.log(
                 `✓ Using cached result for ${packageName} (hash: ${hash})`,
               );
               console.log(cache.output);
+
+              const restored = await cacheManager.restoreArtifacts(
+                hash,
+                packageInfo.cwd,
+              );
+
+              if (restored) {
+                console.log(`✓ Restored artifacts for ${packageName}`);
+              }
+
               if (cache.exitCode !== 0) {
                 throw new Error(`Task failed with exit code ${cache.exitCode}`);
               }
@@ -233,6 +251,28 @@ await new Command()
 
             // Save the result to cache
             await cacheManager.saveCache(hash, result.stdout, result.code);
+
+            // Save artifacts if configured
+            if (artifactConfig && result.code === 0) {
+              try {
+                await cacheManager.saveArtifacts(
+                  hash,
+                  packageInfo.cwd,
+                  artifactConfig,
+                  {
+                    packageName,
+                    taskName,
+                    timestamp: Date.now(),
+                  },
+                );
+                console.log(`✓ Cached artifacts for ${packageName}`);
+              } catch (error) {
+                console.warn(
+                  `Failed to cache artifacts for ${packageName}:`,
+                  error,
+                );
+              }
+            }
 
             if (result.code !== 0) {
               throw new Error(`Task failed with exit code ${result.code}`);

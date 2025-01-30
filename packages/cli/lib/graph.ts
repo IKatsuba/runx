@@ -1,9 +1,18 @@
 export interface PackageJson {
   name: string;
-  version: string;
+  version?: string;
+  private?: boolean;
+  workspaces?: string[];
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
-  workspaces?: string[];
+  scripts?: Record<string, string>;
+  runx?: {
+    artifacts?: {
+      [taskName: string]: {
+        paths: string[];
+      };
+    };
+  };
 }
 
 export interface DependencyNode {
@@ -51,7 +60,7 @@ export class Graph {
 
     const node: DependencyNode = {
       name: packageJson.name,
-      version: packageJson.version,
+      version: packageJson.version || '0.0.0',
       dependencies: [],
       isLocal: true,
     };
