@@ -6,6 +6,7 @@ import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 import { calculateTaskHash, hashify, initCacheManager } from './lib/cache.ts';
+import { debug, error, info, success, warn } from './lib/colors.ts';
 
 const _cacheManager = await initCacheManager(Deno.cwd());
 
@@ -43,14 +44,17 @@ await new Command()
       ...projects: string[]
     ) => {
       const startTime = performance.now();
-      console.log(`Running command ${taskName} with options:`, {
+      console.log(info('[INFO]'), `Running command ${taskName} with options:`, {
         affected,
         projects,
         cache,
         concurrency,
       });
 
-      console.log(`\n> Starting execution of '${taskName}' command...`);
+      console.log(
+        info('[INFO]'),
+        `\n> Starting execution of '${taskName}' command...`,
+      );
 
       // Read root package.json to get workspace patterns
       const rootPackageJson = JSON.parse(
@@ -74,6 +78,7 @@ await new Command()
 
       const foundPackagesEndTime = performance.now();
       console.log(
+        success('[SUCCESS]'),
         `✓ Found and parsed ${packageFiles.length} packages in ${
           ((foundPackagesEndTime - startTime) / 1000).toFixed(2)
         }s`,
@@ -90,6 +95,7 @@ await new Command()
 
       const graphEndTime = performance.now();
       console.log(
+        success('[SUCCESS]'),
         `✓ Built dependency graph in ${
           ((graphEndTime - foundPackagesEndTime) / 1000).toFixed(2)
         }s`,
@@ -98,9 +104,9 @@ await new Command()
       // Check for circular dependencies
       const cycles = graph.findCircularDependencies();
       if (cycles.length > 0) {
-        console.error('Circular dependencies detected:');
+        console.error(error('[ERROR]'), 'Circular dependencies detected:');
         cycles.forEach((cycle) => {
-          console.error(cycle.join(' -> '));
+          console.error(error('[ERROR]'), cycle.join(' -> '));
         });
         Deno.exit(1);
       }
@@ -122,7 +128,7 @@ await new Command()
         affectedPackages,
       );
 
-      console.log('\nAffected packages:');
+      console.log(info('[INFO]'), '\nAffected packages:');
       console.log(Array.from(allAffectedPackages).join('\n'));
 
       if (affected) {
@@ -141,6 +147,7 @@ await new Command()
 
       const topologicalSortEndTime = performance.now();
       console.log(
+        success('[SUCCESS]'),
         `✓ Topologically sorted ${filteredOrder.length} packages in ${
           ((topologicalSortEndTime - topologicalSortEndTime) / 1000).toFixed(
             2,
@@ -151,7 +158,7 @@ await new Command()
       // Group packages by their dependency level for parallel execution
       const levels = graph.getLevels(filteredOrder);
 
-      console.log(levels);
+      console.log(debug('[DEBUG]'), levels);
       // Execute packages level by level with concurrency limit
       for (const level of levels) {
         const levelTasks = level.filter((packageName: string) => {
@@ -162,6 +169,7 @@ await new Command()
         if (levelTasks.length === 0) continue;
 
         console.log(
+          info('[INFO]'),
           `\n> Executing level with ${levelTasks.length} packages...`,
         );
 
@@ -177,6 +185,7 @@ await new Command()
           const activeTasks = runningTasks.filter((t) => !t.done);
           if (activeTasks.length >= (concurrency as number)) {
             console.log(
+              info('[INFO]'),
               `Waiting for tasks to finish. Active tasks: ${
                 activeTasks.map((t) => t.name).join(', ')
               }`,
@@ -205,7 +214,10 @@ await new Command()
           const taskPromise = {
             promise: (async () => {
               try {
-                console.log(`\n> Executing ${taskName} in ${packageName}...`);
+                console.log(
+                  info('[INFO]'),
+                  `\n> Executing ${taskName} in ${packageName}...`,
+                );
                 const segments = parseFullCommand(script);
 
                 for (const segment of segments) {
@@ -257,6 +269,7 @@ await new Command()
 
                     if (cache) {
                       console.log(
+                        info('[INFO]'),
                         `✓ Using cached result for ${packageName} (hash: ${hash})`,
                       );
                       console.log(cache.output);
@@ -266,7 +279,10 @@ await new Command()
                         packageInfo.cwd,
                       );
                       if (restored) {
-                        console.log(`✓ Restored artifacts for ${packageName}`);
+                        console.log(
+                          success('[SUCCESS]'),
+                          `✓ Restored artifacts for ${packageName}`,
+                        );
                       }
 
                       if (cache.exitCode !== 0) {
@@ -304,9 +320,13 @@ await new Command()
                             timestamp: Date.now(),
                           },
                         );
-                        console.log(`✓ Cached artifacts for ${packageName}`);
+                        console.log(
+                          success('[SUCCESS]'),
+                          `✓ Cached artifacts for ${packageName}`,
+                        );
                       } catch (error) {
                         console.warn(
+                          warn('[WARN]'),
                           `Failed to cache artifacts for ${packageName}:`,
                           error,
                         );
@@ -330,14 +350,16 @@ await new Command()
 
                 const packageDuration =
                   ((performance.now() - packageStartTime) / 1000).toFixed(2);
-                console.log(`✓ Finished ${packageName} in ${packageDuration}s`);
-              } catch (error) {
-                if (error instanceof Error) {
-                  errors.push(error);
+                console.log(
+                  success('[SUCCESS]'),
+                  `✓ Finished ${packageName} in ${packageDuration}s`,
+                );
+              } catch (err) {
+                if (err instanceof Error) {
+                  errors.push(err);
                 } else {
-                  errors.push(new Error(String(error)));
+                  errors.push(new Error(String(err)));
                 }
-                throw error;
               }
             })(),
             done: false,
@@ -350,17 +372,23 @@ await new Command()
         // Wait for all tasks in the current level to complete
         try {
           await Promise.all(runningTasks.map((t) => t.promise));
-        } catch (error) {
-          console.error('One or more tasks failed:');
+        } catch (err) {
+          console.error(error('[ERROR]'), 'One or more tasks failed:');
           for (const err of errors) {
-            console.error(err);
+            console.error(
+              error('[ERROR]'),
+              err instanceof Error ? err.message : String(err),
+            );
           }
           Deno.exit(1);
         }
       }
 
       const totalDuration = ((performance.now() - startTime) / 1000).toFixed(2);
-      console.log(`\n> Total execution time: ${totalDuration}s`);
+      console.log(
+        info('[INFO]'),
+        `\n> Total execution time: ${totalDuration}s`,
+      );
     },
   )
   .parse(Deno.args);

@@ -1,5 +1,6 @@
 import $ from '@david/dax';
 import { join } from '@std/path';
+import { error } from './colors.ts';
 
 export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
   try {
@@ -28,8 +29,12 @@ export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
     return [...new Set(allFiles)]
       .filter(Boolean)
       .map((file) => file.trim());
-  } catch (error) {
-    console.error('Error getting changed files:', error);
+  } catch (err) {
+    console.error(
+      error('[ERROR]'),
+      'Error getting changed files:',
+      err instanceof Error ? err.message : String(err),
+    );
     return [];
   }
 }

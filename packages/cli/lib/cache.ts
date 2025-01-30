@@ -1,4 +1,5 @@
 import { crypto } from '@std/crypto';
+import { info } from './colors.ts';
 import { dirname, join } from '@std/path';
 import { copy, ensureDir, exists, expandGlob } from '@std/fs';
 import type { Graph, PackageJson } from './graph.ts';
@@ -250,12 +251,16 @@ export async function calculateTaskHash(
   );
 
   if (isAffected) {
-    console.log(`Skipping cache for affected package ${packageName}`);
+    console.log(
+      info('[INFO]'),
+      `Skipping cache for affected package ${packageName}`,
+    );
   } else {
     // Check memory cache first
     const memCachedHash = hashCache.get(cacheKey);
     if (memCachedHash) {
       console.log(
+        info('[INFO]'),
         `Using memory cached hash for ${packageName} ${taskName}: ${memCachedHash}`,
       );
       return memCachedHash;
@@ -265,6 +270,7 @@ export async function calculateTaskHash(
     const diskCache = await globalCacheManager.getHashCache(cacheKey);
     if (diskCache) {
       console.log(
+        info('[INFO]'),
         `Using disk cached hash for ${packageName} ${taskName}: ${diskCache.hash}`,
       );
       // Store in memory cache for future use
@@ -273,9 +279,12 @@ export async function calculateTaskHash(
     }
   }
 
-  console.log(`Calculating hash for ${packageName} ${taskName}`);
-  console.log(`Package name: ${packageName}`);
-  console.log(`Task name: ${taskName}`);
+  console.log(
+    info('[INFO]'),
+    `Calculating hash for ${packageName} ${taskName}`,
+  );
+  console.log(info('[INFO]'), `Package name: ${packageName}`);
+  console.log(info('[INFO]'), `Task name: ${taskName}`);
 
   // Get all local dependencies from the graph
   const localDependencyHashes: string[] = [];
@@ -338,7 +347,10 @@ export async function calculateTaskHash(
   // Convert to hex string
   const hash = await hashify(inputString);
 
-  console.log(`Hash for ${packageName} ${taskName}: ${hash}`);
+  console.log(
+    info('[INFO]'),
+    `Hash for ${packageName} ${taskName}: ${hash}`,
+  );
 
   // Store the calculated hash in both memory and disk cache
   hashCache.set(cacheKey, hash);
