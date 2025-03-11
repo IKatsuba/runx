@@ -1,12 +1,12 @@
 import { exists, expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
-import { parseFullCommand } from './lib/parse-command.ts';
 import { dirname, join } from '@std/path';
 import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 import { calculateTaskHash, hashify, initCacheManager } from './lib/cache.ts';
 import { logger } from './lib/logger.ts';
+import { listCommand } from './commands/list.ts';
 
 const _cacheManager = await initCacheManager(Deno.cwd());
 
@@ -203,91 +203,74 @@ await new Command()
           // Execute the package task
           const packageStartTime = performance.now();
           const packageInfo = packageMap.get(packageName)!;
-          const script = packageInfo.packageJson.scripts![taskName];
 
           const taskPromise = {
             promise: (async () => {
               try {
                 logger.info(`> Executing ${taskName} in ${packageName}...`);
-                const segments = parseFullCommand(script);
 
-                for (const segment of segments) {
-                  if (typeof segment === 'string') continue;
+                if (cacheManager) {
+                  const exclude = [];
+                  const gitignorePath = join(Deno.cwd(), '.gitignore');
 
-                  const { env, command: cmd, args } = segment;
-                  const which = (await $.which(cmd))!;
-                  const executable = join(Deno.cwd(), which);
-
-                  // If caching is enabled, try to use cached result
-                  if (cacheManager) {
-                    const exclude = [];
-                    const gitignorePath = join(Deno.cwd(), '.gitignore');
-
-                    if (await exists(gitignorePath)) {
-                      const gitignore = await Deno.readTextFile(gitignorePath);
-                      exclude.push(
-                        ...gitignore.split('\n').map((file) => file.trim())
-                          .filter(Boolean),
-                      );
-                    }
-
-                    const packageFiles = await Array.fromAsync(
-                      expandGlob('**/*', {
-                        root: packageInfo.cwd,
-                        exclude,
-                      }),
-                    ).then((files) =>
-                      files.map((file) =>
-                        file.path.replace(Deno.cwd() + '/', '')
-                      )
+                  if (await exists(gitignorePath)) {
+                    const gitignore = await Deno.readTextFile(gitignorePath);
+                    exclude.push(
+                      ...gitignore.split('\n').map((file) => file.trim())
+                        .filter(Boolean),
                     );
+                  }
 
-                    const hash = await calculateTaskHash(
-                      packageName,
-                      taskName,
-                      {
-                        files: packageFiles,
-                        packageJson: packageInfo.packageJson,
-                      },
-                      graph,
-                      packageMap,
-                      allAffectedPackages,
+                  const packageFiles = await Array.fromAsync(
+                    expandGlob('**/*', {
+                      root: packageInfo.cwd,
+                      exclude,
+                    }),
+                  ).then((files) =>
+                    files.map((file) => file.path.replace(Deno.cwd() + '/', ''))
+                  );
+
+                  const hash = await calculateTaskHash(
+                    packageName,
+                    taskName,
+                    {
+                      files: packageFiles,
+                      packageJson: packageInfo.packageJson,
+                    },
+                    graph,
+                    packageMap,
+                    allAffectedPackages,
+                  );
+
+                  const cache = await cacheManager.getCache(hash);
+                  const artifactConfig = packageInfo.packageJson.runx?.tasks
+                    ?.[taskName]?.artifacts as string[] | undefined;
+
+                  if (cache) {
+                    logger.info(
+                      `✓ Using cached result for ${packageName} (hash: ${hash})`,
                     );
+                    logger.info(cache.output);
 
-                    const cache = await cacheManager.getCache(hash);
-                    const artifactConfig = packageInfo.packageJson.runx?.tasks
-                      ?.[taskName]?.artifacts as string[] | undefined;
-
-                    if (cache) {
-                      logger.info(
-                        `✓ Using cached result for ${packageName} (hash: ${hash})`,
-                      );
-                      logger.info(cache.output);
-
-                      const restored = await cacheManager.restoreArtifacts(
-                        hash,
-                        packageInfo.cwd,
-                      );
-                      if (restored) {
-                        logger.success(
-                          `✓ Restored artifacts for ${packageName}`,
-                        );
-                      }
-
-                      if (cache.exitCode !== 0) {
-                        throw new Error(
-                          `Task failed with exit code ${cache.exitCode}`,
-                        );
-                      }
-                      continue;
-                    }
-
-                    const result = await $`${executable} ${args.join(' ')}`.cwd(
+                    const restored = await cacheManager.restoreArtifacts(
+                      hash,
                       packageInfo.cwd,
-                    ).env({
-                      ...Deno.env.toObject(),
-                      ...(env ?? {}),
-                    }).stdout('inheritPiped');
+                    );
+                    if (restored) {
+                      logger.success(
+                        `✓ Restored artifacts for ${packageName}`,
+                      );
+                    }
+
+                    if (cache.exitCode !== 0) {
+                      throw new Error(
+                        `Task failed with exit code ${cache.exitCode}`,
+                      );
+                    }
+                  } else {
+                    const result = await $`npm run --silent ${taskName}`.cwd(
+                      packageInfo.cwd,
+                    ).env(Deno.env.toObject()).stdout('inheritPiped');
 
                     logger.info(result.stdout);
 
@@ -325,14 +308,11 @@ await new Command()
                         `Task failed with exit code ${result.code}`,
                       );
                     }
-                  } else {
-                    await $`${executable} ${args.join(' ')}`.cwd(
-                      packageInfo.cwd,
-                    ).env({
-                      ...Deno.env.toObject(),
-                      ...(env ?? {}),
-                    });
                   }
+                } else {
+                  await $`npm run --silent ${taskName}`.cwd(
+                    packageInfo.cwd,
+                  ).env(Deno.env.toObject());
                 }
 
                 const packageDuration =
@@ -373,6 +353,7 @@ await new Command()
       logger.info(`Total execution time: ${totalDuration}s`);
     },
   )
+  .command('list', listCommand)
   .parse(Deno.args);
 
 async function findWorkspacePackages(
