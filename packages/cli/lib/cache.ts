@@ -3,6 +3,7 @@ import { logger } from './logger.ts';
 import { dirname, join } from '@std/path';
 import { copy, ensureDir, exists, expandGlob } from '@std/fs';
 import type { Graph, PackageJson } from './graph.ts';
+import { parseGitignore } from './gitignore.ts';
 
 interface TaskCache {
   hash: string;
@@ -298,9 +299,7 @@ export async function calculateTaskHash(
             if (await exists(gitignorePath)) {
               const gitignore = await Deno.readTextFile(gitignorePath);
               exclude.push(
-                ...gitignore.split('\n').map((file) => file.trim()).filter(
-                  Boolean,
-                ),
+                ...parseGitignore(gitignore),
               );
             }
 
@@ -372,3 +371,5 @@ export async function hashify(input: string): Promise<string> {
 
   return hash;
 }
+
+export const cacheManager = await initCacheManager(Deno.cwd());

@@ -1,14 +1,18 @@
 import { exists, expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
-import { dirname, join } from '@std/path';
+import { join } from '@std/path';
 import $ from '@david/dax';
 import { Graph, type PackageJson } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
-import { calculateTaskHash, hashify, initCacheManager } from './lib/cache.ts';
+import { cacheManager, calculateTaskHash } from './lib/cache.ts';
 import { logger } from './lib/logger.ts';
 import { listCommand } from './commands/list.ts';
-
-const _cacheManager = await initCacheManager(Deno.cwd());
+import {
+  getWorkspacePatterns,
+  getWorkspaceProjects,
+  readRootConfig,
+} from './lib/workspace.ts';
+import { parseGitignore } from './lib/gitignore.ts';
 
 await new Command()
   .name('runx')
@@ -54,25 +58,11 @@ await new Command()
       logger.info(`> Starting execution of '${taskName}' command...`);
 
       // Read root package.json to get workspace patterns
-      const rootPackageJson = JSON.parse(
-        await Deno.readTextFile(join(Deno.cwd(), 'package.json')),
-      ) as PackageJson;
-
-      const workspaces = rootPackageJson.workspaces?.map((workspace) =>
-        join(workspace, 'package.json')
-      );
-
-      const workspacePatterns = workspaces || ['**/package.json'];
-
-      // Initialize cache manager if caching is enabled
-
-      const cacheManager = cache ? _cacheManager : null;
-      if (cacheManager) {
-        await cacheManager.init();
-      }
+      const rootPackageJson = await readRootConfig();
+      const workspacePatterns = getWorkspacePatterns(rootPackageJson);
 
       // Find all packages using optimized search
-      const packageFiles = await findWorkspacePackages(
+      const packageFiles = await getWorkspaceProjects(
         workspacePatterns,
       );
 
@@ -216,8 +206,7 @@ await new Command()
                   if (await exists(gitignorePath)) {
                     const gitignore = await Deno.readTextFile(gitignorePath);
                     exclude.push(
-                      ...gitignore.split('\n').map((file) => file.trim())
-                        .filter(Boolean),
+                      ...parseGitignore(gitignore),
                     );
                   }
 
@@ -353,50 +342,5 @@ await new Command()
       logger.info(`Total execution time: ${totalDuration}s`);
     },
   )
-  .command('list', listCommand)
+  .command('list, ls', listCommand)
   .parse(Deno.args);
-
-async function findWorkspacePackages(
-  workspacePatterns: string[],
-): Promise<Array<{ packageJson: PackageJson; cwd: string }>> {
-  const cacheKey = await hashify(JSON.stringify(workspacePatterns));
-
-  // Try to get from cache
-  const cachedFiles = _cacheManager.getFileSearchCache(cacheKey);
-  if (cachedFiles) {
-    return Promise.all(
-      cachedFiles.map(async (path: string) => ({
-        packageJson: JSON.parse(await Deno.readTextFile(path)),
-        cwd: dirname(path),
-      })),
-    );
-  }
-
-  // Find all package.json files
-  const packageFileSpecs = await Promise.all(
-    workspacePatterns.map((pattern) =>
-      Array.fromAsync(
-        expandGlob(
-          pattern,
-          {
-            root: Deno.cwd(),
-            exclude: ['**/node_modules/**'],
-          },
-        ),
-      )
-    ),
-  ).then((results) => results.flat());
-
-  // Cache the results
-  _cacheManager.saveFileSearchCache(
-    cacheKey,
-    packageFileSpecs.map((spec) => spec.path),
-  );
-
-  return Promise.all(
-    packageFileSpecs.map(async (spec) => ({
-      packageJson: JSON.parse(await Deno.readTextFile(spec.path)),
-      cwd: dirname(spec.path),
-    })),
-  );
-}

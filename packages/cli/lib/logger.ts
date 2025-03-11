@@ -1,7 +1,14 @@
 import signale from 'signale';
 
 export class Logger {
-  private logger: typeof signale = signale.scope('runx');
+  private logger = new signale.Signale({
+    scope: 'runx',
+    logLevel: 'info',
+  });
+
+  raw(...args: unknown[]) {
+    Deno.stdout.writeSync(new TextEncoder().encode(args.join(' ')));
+  }
 
   await(...args: unknown[]) {
     this.logger.await(...args);
@@ -55,16 +62,16 @@ export class Logger {
     this.logger.success(...args);
   }
 
-  wait(...args: unknown[]) {
-    this.logger.wait(...args);
-  }
-
   warn(...args: unknown[]) {
     this.logger.warn(...args);
   }
 
   watch(...args: unknown[]) {
     this.logger.watch(...args);
+  }
+
+  log(...args: unknown[]) {
+    this.logger.log(...args);
   }
 }
 export const logger = new Logger();
