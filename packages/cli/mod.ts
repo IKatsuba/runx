@@ -58,8 +58,11 @@ await new Command()
         await Deno.readTextFile(join(Deno.cwd(), 'package.json')),
       ) as PackageJson;
 
-      const workspacePatterns = rootPackageJson.workspaces ||
-        ['**/package.json'];
+      const workspaces = rootPackageJson.workspaces?.map((workspace) =>
+        join(workspace, 'package.json')
+      );
+
+      const workspacePatterns = workspaces || ['**/package.json'];
 
       // Initialize cache manager if caching is enabled
 
@@ -393,9 +396,7 @@ async function findWorkspacePackages(
     workspacePatterns.map((pattern) =>
       Array.fromAsync(
         expandGlob(
-          pattern.endsWith('package.json')
-            ? pattern
-            : join(pattern, 'package.json'),
+          pattern,
           {
             root: Deno.cwd(),
             exclude: ['**/node_modules/**'],
