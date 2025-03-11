@@ -337,7 +337,7 @@ await new Command()
         // Wait for all tasks in the current level to complete
         try {
           await Promise.all(runningTasks.map((t) => t.promise));
-        } catch (err) {
+        } catch (_err) {
           for (const err of errors) {
             logger.error(
               err instanceof Error ? err.message : String(err),

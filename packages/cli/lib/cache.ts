@@ -2,7 +2,7 @@ import { crypto } from '@std/crypto';
 import { logger } from './logger.ts';
 import { dirname, join } from '@std/path';
 import { copy, ensureDir, exists, expandGlob } from '@std/fs';
-import type { Graph, PackageJson, Project } from './graph.ts';
+import type { Graph, Project } from './graph.ts';
 import { parseGitignore } from './gitignore.ts';
 
 interface TaskCache {

@@ -1,7 +1,6 @@
 import { join } from '@std/path/join';
 import { exists } from '@std/fs/exists';
 import { dirname } from '@std/path/dirname';
-import { logger } from './logger.ts';
 
 export interface RunxConfig {
   tasks?: {

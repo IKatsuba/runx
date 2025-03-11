@@ -1,7 +1,8 @@
 import $ from '@david/dax';
 import { join } from '@std/path';
 import { logger } from './logger.ts';
-import { Project } from './graph.ts';
+import type { Project } from './graph.ts';
+
 export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
   try {
     // Get the merge base commit
