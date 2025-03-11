@@ -2,7 +2,7 @@ import { exists, expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
 import { join } from '@std/path';
 import $ from '@david/dax';
-import { Graph, type PackageJson } from './lib/graph.ts';
+import { Graph } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
 import { cacheManager, calculateTaskHash } from './lib/cache.ts';
 import { logger } from './lib/logger.ts';
@@ -43,15 +43,15 @@ await new Command()
   .arguments('<task-name> [...project]')
   .action(
     async (
-      { affected, cache, concurrency },
+      { affected, cache: cacheFlag, concurrency },
       taskName,
-      ...projects: string[]
+      ...projectNames: string[]
     ) => {
       const startTime = performance.now();
       logger.info(`Running command ${taskName} with options:`, {
         affected,
-        projects,
-        cache,
+        projects: projectNames,
+        cache: cacheFlag,
         concurrency,
       });
 
@@ -62,24 +62,19 @@ await new Command()
       const workspacePatterns = getWorkspacePatterns(rootPackageJson);
 
       // Find all packages using optimized search
-      const packageFiles = await getWorkspaceProjects(
+      const projects = await getWorkspaceProjects(
         workspacePatterns,
       );
 
       const foundPackagesEndTime = performance.now();
       logger.success(
-        `Found and parsed ${packageFiles.length} packages in ${
+        `Found and parsed ${projects.length} projects in ${
           ((foundPackagesEndTime - startTime) / 1000).toFixed(2)
         }s`,
       );
 
-      // Create packages array for the Graph
-      const packages: PackageJson[] = packageFiles.map(({ packageJson }) =>
-        packageJson
-      );
-
       // Build dependency graph
-      const graph = new Graph(packages);
+      const graph = new Graph(projects);
       await graph.buildGraph();
 
       const graphEndTime = performance.now();
@@ -102,13 +97,13 @@ await new Command()
       // Get topologically sorted package names
       const executionOrder = graph.getTopologicalSort();
 
-      let filteredOrder = executionOrder;
+      let filteredOrder = [...executionOrder];
 
       const baseBranch = typeof affected === 'string' ? affected : 'main';
       const changedFiles = await getChangedFiles(baseBranch);
       const affectedPackages = getAffectedPackages(
         changedFiles,
-        packageFiles,
+        projects,
       );
 
       // Get affected packages with their dependents
@@ -125,13 +120,15 @@ await new Command()
         filteredOrder = executionOrder.filter((pkg) =>
           allAffectedPackages.has(pkg)
         );
-      } else if (projects.length > 0) {
-        filteredOrder = executionOrder.filter((pkg) => projects.includes(pkg));
+      } else if (projectNames.length > 0) {
+        filteredOrder = executionOrder.filter((pkg) =>
+          projectNames.includes(pkg)
+        );
       }
 
       // Create a map of package names to their file info for easy lookup
       const packageMap = new Map(
-        packageFiles.map((pkg) => [pkg.packageJson.name, pkg]),
+        projects.map((pkg) => [pkg.name, pkg]),
       );
 
       const topologicalSortEndTime = performance.now();
@@ -146,12 +143,12 @@ await new Command()
       // Group packages by their dependency level for parallel execution
       const levels = graph.getLevels(filteredOrder);
 
-      logger.debug(levels);
+      logger.debug('levels', levels);
       // Execute packages level by level with concurrency limit
       for (const level of levels) {
         const levelTasks = level.filter((packageName: string) => {
           const packageInfo = packageMap.get(packageName);
-          return packageInfo?.packageJson.scripts?.[taskName];
+          return packageInfo?.tasks?.[taskName];
         });
 
         if (levelTasks.length === 0) continue;
@@ -199,7 +196,7 @@ await new Command()
               try {
                 logger.info(`> Executing ${taskName} in ${packageName}...`);
 
-                if (cacheManager) {
+                if (cacheFlag && cacheManager) {
                   const exclude = [];
                   const gitignorePath = join(Deno.cwd(), '.gitignore');
 
@@ -212,7 +209,7 @@ await new Command()
 
                   const packageFiles = await Array.fromAsync(
                     expandGlob('**/*', {
-                      root: packageInfo.cwd,
+                      root: packageInfo.path,
                       exclude,
                     }),
                   ).then((files) =>
@@ -224,15 +221,17 @@ await new Command()
                     taskName,
                     {
                       files: packageFiles,
-                      packageJson: packageInfo.packageJson,
+                      project: packageInfo,
                     },
                     graph,
                     packageMap,
                     allAffectedPackages,
                   );
 
-                  const cache = await cacheManager.getCache(hash);
-                  const artifactConfig = packageInfo.packageJson.runx?.tasks
+                  const cache = cacheFlag
+                    ? await cacheManager.getCache(hash)
+                    : null;
+                  const artifactConfig = packageInfo.runx?.tasks
                     ?.[taskName]?.artifacts as string[] | undefined;
 
                   if (cache) {
@@ -243,7 +242,7 @@ await new Command()
 
                     const restored = await cacheManager.restoreArtifacts(
                       hash,
-                      packageInfo.cwd,
+                      packageInfo.path,
                     );
                     if (restored) {
                       logger.success(
@@ -257,8 +256,10 @@ await new Command()
                       );
                     }
                   } else {
-                    const result = await $`npm run --silent ${taskName}`.cwd(
-                      packageInfo.cwd,
+                    const result = await $`${
+                      packageInfo.tasks[taskName].runCommand
+                    } --silent ${taskName}`.cwd(
+                      packageInfo.path,
                     ).env(Deno.env.toObject()).stdout('inheritPiped');
 
                     logger.info(result.stdout);
@@ -273,7 +274,7 @@ await new Command()
                       try {
                         await cacheManager.saveArtifacts(
                           hash,
-                          packageInfo.cwd,
+                          packageInfo.path,
                           artifactConfig,
                           {
                             packageName,
@@ -299,9 +300,17 @@ await new Command()
                     }
                   }
                 } else {
-                  await $`npm run --silent ${taskName}`.cwd(
-                    packageInfo.cwd,
-                  ).env(Deno.env.toObject());
+                  logger.info(
+                    `${packageInfo.tasks[taskName].runCommand} ${taskName}`,
+                  );
+                  await $`${packageInfo.tasks[taskName].runCommand} ${taskName}`
+                    .cwd(
+                      packageInfo.path,
+                    ).env(Deno.env.toObject());
+
+                  logger.info(
+                    `${packageInfo.tasks[taskName].runCommand} ${taskName}`,
+                  );
                 }
 
                 const packageDuration =
@@ -310,6 +319,7 @@ await new Command()
                   `✓ Finished ${packageName} in ${packageDuration}s`,
                 );
               } catch (err) {
+                logger.error(err);
                 if (err instanceof Error) {
                   errors.push(err);
                 } else {
@@ -328,7 +338,6 @@ await new Command()
         try {
           await Promise.all(runningTasks.map((t) => t.promise));
         } catch (err) {
-          logger.error('One or more tasks failed:');
           for (const err of errors) {
             logger.error(
               err instanceof Error ? err.message : String(err),

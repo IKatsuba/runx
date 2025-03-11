@@ -1,3 +1,16 @@
+import { join } from '@std/path/join';
+import { exists } from '@std/fs/exists';
+import { dirname } from '@std/path/dirname';
+import { logger } from './logger.ts';
+
+export interface RunxConfig {
+  tasks?: {
+    [taskName: string]: {
+      artifacts: string[];
+    };
+  };
+}
+
 export interface PackageJson {
   name: string;
   version?: string;
@@ -6,13 +19,35 @@ export interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   scripts?: Record<string, string>;
-  runx?: {
-    tasks?: {
-      [taskName: string]: {
-        artifacts: string[];
-      };
-    };
-  };
+  runx?: RunxConfig;
+}
+
+export interface DenoJson {
+  name?: string;
+  tasks: Record<
+    string,
+    {
+      command: string;
+    } | string
+  >;
+  imports?: Record<string, string>;
+  runx?: RunxConfig;
+}
+
+export interface ProjectTask {
+  name: string;
+  runCommand: string[];
+  script: string;
+}
+
+export interface Project {
+  path: string;
+  name: string;
+  dependencies: Record<string, string>;
+  tasks: Record<string, ProjectTask>;
+  version?: string;
+  workspace?: string[];
+  runx?: RunxConfig;
 }
 
 export interface DependencyNode {
@@ -22,13 +57,64 @@ export interface DependencyNode {
   isLocal: boolean; // Флаг для определения локального пакета
 }
 
+export async function parseProject(path: string): Promise<Project> {
+  const isFile = path.endsWith('.json');
+
+  const dir = isFile ? dirname(path) : path;
+  const packagePath = isFile ? path : join(dir, 'package.json');
+  const denoPath = isFile ? path : join(dir, 'deno.json');
+
+  const denoExists = await exists(denoPath, { isFile: true });
+  const packageJsonExists = await exists(packagePath, { isFile: true });
+
+  const packageJson = packageJsonExists
+    ? JSON.parse(
+      Deno.readTextFileSync(packagePath),
+    ) as PackageJson
+    : undefined;
+  const denoJson = denoExists
+    ? JSON.parse(Deno.readTextFileSync(denoPath)) as DenoJson
+    : undefined;
+
+  return {
+    path: dir,
+    name: denoJson?.name ?? packageJson?.name ?? path,
+    version: packageJson?.version ?? denoJson?.name ?? '0.0.0-local',
+    dependencies: {
+      ...(packageJson?.dependencies ?? {}),
+      ...(packageJson?.devDependencies ?? {}),
+      ...(denoJson?.imports ?? {}),
+    },
+    tasks: Object.fromEntries(
+      [
+        ...Object.entries(packageJson?.scripts ?? {}).map((
+          [name, script],
+        ) => [name, {
+          name,
+          runCommand: ['npm', 'run', '--silent'],
+          script,
+        }]),
+        ...Object.entries(denoJson?.tasks ?? {}).map(([name, task]) => [name, {
+          name,
+          runCommand: ['deno', 'task'],
+          script: typeof task === 'string' ? task : task.command,
+        }]),
+      ],
+    ),
+    runx: {
+      ...(packageJson?.runx ?? {}),
+      ...(denoJson?.runx ?? {}),
+    },
+  };
+}
+
 export class Graph {
   private nodes: Map<string, DependencyNode> = new Map();
-  private localPackages: Map<string, PackageJson> = new Map();
+  private localPackages: Map<string, Project> = new Map();
   private edges: Map<string, Set<string>> = new Map();
   private reverseEdges: Map<string, Set<string>> = new Map();
 
-  constructor(packages: PackageJson[]) {
+  constructor(packages: Project[]) {
     // Инициализируем карту локальных пакетов
     packages.forEach((pkg) => {
       this.localPackages.set(pkg.name, pkg);
@@ -52,8 +138,8 @@ export class Graph {
     return rootNodes;
   }
 
-  private async createNode(packageJson: PackageJson): Promise<DependencyNode> {
-    const nodeKey = packageJson.name;
+  private async createNode(project: Project): Promise<DependencyNode> {
+    const nodeKey = project.name;
 
     // Проверяем, не создавали ли мы уже этот узел
     if (this.nodes.has(nodeKey)) {
@@ -61,8 +147,8 @@ export class Graph {
     }
 
     const node: DependencyNode = {
-      name: packageJson.name,
-      version: packageJson.version || '0.0.0',
+      name: project.name,
+      version: project.version ?? '0.0.0-local',
       dependencies: [],
       isLocal: true,
     };
@@ -78,13 +164,9 @@ export class Graph {
       this.reverseEdges.set(nodeKey, new Set());
     }
 
-    // Обрабатываем все зависимости
-    const allDependencies = {
-      ...(packageJson.dependencies || {}),
-      ...(packageJson.devDependencies || {}),
-    };
-
-    for (const [depName, depVersion] of Object.entries(allDependencies)) {
+    for (
+      const depName of Object.keys(project.dependencies)
+    ) {
       // Проверяем, является ли зависимость локальным пакетом
       const localDep = this.localPackages.get(depName);
 

@@ -2,7 +2,7 @@ import { crypto } from '@std/crypto';
 import { logger } from './logger.ts';
 import { dirname, join } from '@std/path';
 import { copy, ensureDir, exists, expandGlob } from '@std/fs';
-import type { Graph, PackageJson } from './graph.ts';
+import type { Graph, PackageJson, Project } from './graph.ts';
 import { parseGitignore } from './gitignore.ts';
 
 interface TaskCache {
@@ -20,7 +20,7 @@ interface HashCache {
     taskName: string;
     dependencies: {
       files: string[];
-      packageJson: PackageJson;
+      project: Project;
     };
     localDependencyHashes: string[];
   };
@@ -231,10 +231,10 @@ export async function calculateTaskHash(
   taskName: string,
   dependencies: {
     files: string[];
-    packageJson: PackageJson;
+    project: Project;
   },
   graph?: Graph,
-  packageMap?: Map<string, { packageJson: PackageJson; cwd: string }>,
+  packageMap?: Map<string, Project>,
   affectedPackages?: Set<string>,
 ): Promise<string> {
   if (!globalCacheManager) {
@@ -305,7 +305,7 @@ export async function calculateTaskHash(
 
             const depFiles = await Array.fromAsync(
               expandGlob('**/*', {
-                root: depInfo.cwd,
+                root: depInfo.path,
                 exclude,
               }),
             ).then((files) =>
@@ -318,7 +318,7 @@ export async function calculateTaskHash(
               taskName,
               {
                 files: depFiles,
-                packageJson: depInfo.packageJson,
+                project: depInfo,
               },
               graph,
               packageMap,

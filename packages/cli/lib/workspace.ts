@@ -1,44 +1,31 @@
 import { join } from '@std/path/join';
-import type { PackageJson } from './graph.ts';
-import { logger } from './logger.ts';
+import { parseProject, type Project } from './graph.ts';
 import { cacheManager, hashify } from './cache.ts';
-import { dirname } from '@std/path/dirname';
 import { expandGlob } from '@std/fs/expand-glob';
 import { exists } from '@std/fs/exists';
 import { parseGitignore } from './gitignore.ts';
 
-export function getWorkspacePatterns(config: PackageJson) {
-  return config.workspaces?.map((workspace) =>
-    join(workspace, 'package.json')
-  ) ?? ['**/package.json'];
+export function getWorkspacePatterns(config: Project) {
+  return config.workspace?.map((
+    workspace,
+  ) => [join(workspace, 'package.json'), join(workspace, 'deno.json')])
+    .flat() ?? ['**/package.json', '**/deno.json'];
 }
 
-export async function readRootConfig(): Promise<PackageJson> {
-  try {
-    return JSON.parse(
-      await Deno.readTextFile(join(Deno.cwd(), 'package.json')),
-    );
-  } catch (_error) {
-    const error = new Error('Failed to read root config');
-
-    logger.error(error);
-    throw error;
-  }
+export function readRootConfig(): Promise<Project> {
+  return parseProject(Deno.cwd());
 }
 
 export async function getWorkspaceProjects(
   workspacePatterns: string[],
-): Promise<Array<{ packageJson: PackageJson; cwd: string }>> {
+): Promise<Array<Project>> {
   const cacheKey = await hashify(JSON.stringify(workspacePatterns));
 
   // Try to get from cache
   const cachedFiles = cacheManager.getFileSearchCache(cacheKey);
   if (cachedFiles) {
     return Promise.all(
-      cachedFiles.map(async (path: string) => ({
-        packageJson: JSON.parse(await Deno.readTextFile(path)),
-        cwd: dirname(path),
-      })),
+      cachedFiles.map((path) => parseProject(path)),
     );
   }
 
@@ -52,7 +39,7 @@ export async function getWorkspaceProjects(
     );
   }
 
-  // Find all package.json files
+  // Find all package.json and deno.json files
   const packageFileSpecs = await Promise.all(
     workspacePatterns.map((pattern) =>
       Array.fromAsync(
@@ -74,9 +61,6 @@ export async function getWorkspaceProjects(
   );
 
   return Promise.all(
-    packageFileSpecs.map(async (spec) => ({
-      packageJson: JSON.parse(await Deno.readTextFile(spec.path)),
-      cwd: dirname(spec.path),
-    })),
+    packageFileSpecs.map((spec) => parseProject(spec.path)),
   );
 }

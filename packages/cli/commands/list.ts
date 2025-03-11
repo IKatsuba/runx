@@ -21,14 +21,14 @@ export const listCommand = new Command()
     if (json) {
       logger.raw(
         JSON.stringify(
-          packageFiles.map((packageFile) => packageFile.packageJson.name),
+          packageFiles.map((packageFile) => packageFile.name),
           null,
           2,
         ),
       );
     } else {
       for (const packageFile of packageFiles) {
-        logger.info(packageFile.packageJson.name);
+        logger.info(packageFile.name);
       }
     }
   });
