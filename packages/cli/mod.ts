@@ -1,14 +1,18 @@
 import { exists, expandGlob } from '@std/fs';
 import { Command } from '@cliffy/command';
-import { parseFullCommand } from './lib/parse-command.ts';
-import { dirname, join } from '@std/path';
+import { join } from '@std/path';
 import $ from '@david/dax';
-import { Graph, type PackageJson } from './lib/graph.ts';
+import { Graph } from './lib/graph.ts';
 import { getAffectedPackages, getChangedFiles } from './lib/git.ts';
-import { calculateTaskHash, hashify, initCacheManager } from './lib/cache.ts';
+import { cacheManager, calculateTaskHash } from './lib/cache.ts';
 import { logger } from './lib/logger.ts';
-
-const _cacheManager = await initCacheManager(Deno.cwd());
+import { listCommand } from './commands/list.ts';
+import {
+  getWorkspacePatterns,
+  getWorkspaceProjects,
+  readRootConfig,
+} from './lib/workspace.ts';
+import { parseGitignore } from './lib/gitignore.ts';
 
 await new Command()
   .name('runx')
@@ -39,54 +43,38 @@ await new Command()
   .arguments('<task-name> [...project]')
   .action(
     async (
-      { affected, cache, concurrency },
+      { affected, cache: cacheFlag, concurrency },
       taskName,
-      ...projects: string[]
+      ...projectNames: string[]
     ) => {
       const startTime = performance.now();
       logger.info(`Running command ${taskName} with options:`, {
         affected,
-        projects,
-        cache,
+        projects: projectNames,
+        cache: cacheFlag,
         concurrency,
       });
 
       logger.info(`> Starting execution of '${taskName}' command...`);
 
       // Read root package.json to get workspace patterns
-      const rootPackageJson = JSON.parse(
-        await Deno.readTextFile(join(Deno.cwd(), 'package.json')),
-      ) as PackageJson;
-
-      const workspacePatterns = rootPackageJson.workspaces ||
-        ['**/package.json'];
-
-      // Initialize cache manager if caching is enabled
-
-      const cacheManager = cache ? _cacheManager : null;
-      if (cacheManager) {
-        await cacheManager.init();
-      }
+      const rootPackageJson = await readRootConfig();
+      const workspacePatterns = getWorkspacePatterns(rootPackageJson);
 
       // Find all packages using optimized search
-      const packageFiles = await findWorkspacePackages(
+      const projects = await getWorkspaceProjects(
         workspacePatterns,
       );
 
       const foundPackagesEndTime = performance.now();
       logger.success(
-        `Found and parsed ${packageFiles.length} packages in ${
+        `Found and parsed ${projects.length} projects in ${
           ((foundPackagesEndTime - startTime) / 1000).toFixed(2)
         }s`,
       );
 
-      // Create packages array for the Graph
-      const packages: PackageJson[] = packageFiles.map(({ packageJson }) =>
-        packageJson
-      );
-
       // Build dependency graph
-      const graph = new Graph(packages);
+      const graph = new Graph(projects);
       await graph.buildGraph();
 
       const graphEndTime = performance.now();
@@ -109,13 +97,13 @@ await new Command()
       // Get topologically sorted package names
       const executionOrder = graph.getTopologicalSort();
 
-      let filteredOrder = executionOrder;
+      let filteredOrder = [...executionOrder];
 
       const baseBranch = typeof affected === 'string' ? affected : 'main';
       const changedFiles = await getChangedFiles(baseBranch);
       const affectedPackages = getAffectedPackages(
         changedFiles,
-        packageFiles,
+        projects,
       );
 
       // Get affected packages with their dependents
@@ -132,13 +120,15 @@ await new Command()
         filteredOrder = executionOrder.filter((pkg) =>
           allAffectedPackages.has(pkg)
         );
-      } else if (projects.length > 0) {
-        filteredOrder = executionOrder.filter((pkg) => projects.includes(pkg));
+      } else if (projectNames.length > 0) {
+        filteredOrder = executionOrder.filter((pkg) =>
+          projectNames.includes(pkg)
+        );
       }
 
       // Create a map of package names to their file info for easy lookup
       const packageMap = new Map(
-        packageFiles.map((pkg) => [pkg.packageJson.name, pkg]),
+        projects.map((pkg) => [pkg.name, pkg]),
       );
 
       const topologicalSortEndTime = performance.now();
@@ -153,12 +143,12 @@ await new Command()
       // Group packages by their dependency level for parallel execution
       const levels = graph.getLevels(filteredOrder);
 
-      logger.debug(levels);
+      logger.debug('levels', levels);
       // Execute packages level by level with concurrency limit
       for (const level of levels) {
         const levelTasks = level.filter((packageName: string) => {
           const packageInfo = packageMap.get(packageName);
-          return packageInfo?.packageJson.scripts?.[taskName];
+          return packageInfo?.tasks?.[taskName];
         });
 
         if (levelTasks.length === 0) continue;
@@ -200,91 +190,77 @@ await new Command()
           // Execute the package task
           const packageStartTime = performance.now();
           const packageInfo = packageMap.get(packageName)!;
-          const script = packageInfo.packageJson.scripts![taskName];
 
           const taskPromise = {
             promise: (async () => {
               try {
                 logger.info(`> Executing ${taskName} in ${packageName}...`);
-                const segments = parseFullCommand(script);
 
-                for (const segment of segments) {
-                  if (typeof segment === 'string') continue;
+                if (cacheFlag && cacheManager) {
+                  const exclude = [];
+                  const gitignorePath = join(Deno.cwd(), '.gitignore');
 
-                  const { env, command: cmd, args } = segment;
-                  const which = (await $.which(cmd))!;
-                  const executable = join(Deno.cwd(), which);
+                  if (await exists(gitignorePath)) {
+                    const gitignore = await Deno.readTextFile(gitignorePath);
+                    exclude.push(
+                      ...parseGitignore(gitignore),
+                    );
+                  }
 
-                  // If caching is enabled, try to use cached result
-                  if (cacheManager) {
-                    const exclude = [];
-                    const gitignorePath = join(Deno.cwd(), '.gitignore');
+                  const packageFiles = await Array.fromAsync(
+                    expandGlob('**/*', {
+                      root: packageInfo.path,
+                      exclude,
+                    }),
+                  ).then((files) =>
+                    files.map((file) => file.path.replace(Deno.cwd() + '/', ''))
+                  );
 
-                    if (await exists(gitignorePath)) {
-                      const gitignore = await Deno.readTextFile(gitignorePath);
-                      exclude.push(
-                        ...gitignore.split('\n').map((file) => file.trim())
-                          .filter(Boolean),
+                  const hash = await calculateTaskHash(
+                    packageName,
+                    taskName,
+                    {
+                      files: packageFiles,
+                      project: packageInfo,
+                    },
+                    graph,
+                    packageMap,
+                    allAffectedPackages,
+                  );
+
+                  const cache = cacheFlag
+                    ? await cacheManager.getCache(hash)
+                    : null;
+                  const artifactConfig = packageInfo.runx?.tasks
+                    ?.[taskName]?.artifacts as string[] | undefined;
+
+                  if (cache) {
+                    logger.info(
+                      `✓ Using cached result for ${packageName} (hash: ${hash})`,
+                    );
+                    logger.info(cache.output);
+
+                    const restored = await cacheManager.restoreArtifacts(
+                      hash,
+                      packageInfo.path,
+                    );
+                    if (restored) {
+                      logger.success(
+                        `✓ Restored artifacts for ${packageName}`,
                       );
                     }
 
-                    const packageFiles = await Array.fromAsync(
-                      expandGlob('**/*', {
-                        root: packageInfo.cwd,
-                        exclude,
-                      }),
-                    ).then((files) =>
-                      files.map((file) =>
-                        file.path.replace(Deno.cwd() + '/', '')
-                      )
-                    );
-
-                    const hash = await calculateTaskHash(
-                      packageName,
-                      taskName,
-                      {
-                        files: packageFiles,
-                        packageJson: packageInfo.packageJson,
-                      },
-                      graph,
-                      packageMap,
-                      allAffectedPackages,
-                    );
-
-                    const cache = await cacheManager.getCache(hash);
-                    const artifactConfig = packageInfo.packageJson.runx?.tasks
-                      ?.[taskName]?.artifacts as string[] | undefined;
-
-                    if (cache) {
-                      logger.info(
-                        `✓ Using cached result for ${packageName} (hash: ${hash})`,
+                    if (cache.exitCode !== 0) {
+                      throw new Error(
+                        `Task failed with exit code ${cache.exitCode}`,
                       );
-                      logger.info(cache.output);
-
-                      const restored = await cacheManager.restoreArtifacts(
-                        hash,
-                        packageInfo.cwd,
-                      );
-                      if (restored) {
-                        logger.success(
-                          `✓ Restored artifacts for ${packageName}`,
-                        );
-                      }
-
-                      if (cache.exitCode !== 0) {
-                        throw new Error(
-                          `Task failed with exit code ${cache.exitCode}`,
-                        );
-                      }
-                      continue;
                     }
-
-                    const result = await $`${executable} ${args.join(' ')}`.cwd(
-                      packageInfo.cwd,
-                    ).env({
-                      ...Deno.env.toObject(),
-                      ...(env ?? {}),
-                    }).stdout('inheritPiped');
+                  } else {
+                    const result = await $`${
+                      packageInfo.tasks[taskName].runCommand
+                    } --silent ${taskName}`.cwd(
+                      packageInfo.path,
+                    ).env(Deno.env.toObject()).stdout('inheritPiped');
 
                     logger.info(result.stdout);
 
@@ -298,7 +274,7 @@ await new Command()
                       try {
                         await cacheManager.saveArtifacts(
                           hash,
-                          packageInfo.cwd,
+                          packageInfo.path,
                           artifactConfig,
                           {
                             packageName,
@@ -322,14 +298,19 @@ await new Command()
                         `Task failed with exit code ${result.code}`,
                       );
                     }
-                  } else {
-                    await $`${executable} ${args.join(' ')}`.cwd(
-                      packageInfo.cwd,
-                    ).env({
-                      ...Deno.env.toObject(),
-                      ...(env ?? {}),
-                    });
                   }
+                } else {
+                  logger.info(
+                    `${packageInfo.tasks[taskName].runCommand} ${taskName}`,
+                  );
+                  await $`${packageInfo.tasks[taskName].runCommand} ${taskName}`
+                    .cwd(
+                      packageInfo.path,
+                    ).env(Deno.env.toObject());
+
+                  logger.info(
+                    `${packageInfo.tasks[taskName].runCommand} ${taskName}`,
+                  );
                 }
 
                 const packageDuration =
@@ -338,6 +319,7 @@ await new Command()
                   `✓ Finished ${packageName} in ${packageDuration}s`,
                 );
               } catch (err) {
+                logger.error(err);
                 if (err instanceof Error) {
                   errors.push(err);
                 } else {
@@ -355,8 +337,7 @@ await new Command()
         // Wait for all tasks in the current level to complete
         try {
           await Promise.all(runningTasks.map((t) => t.promise));
-        } catch (err) {
-          logger.error('One or more tasks failed:');
+        } catch (_err) {
           for (const err of errors) {
             logger.error(
               err instanceof Error ? err.message : String(err),
@@ -370,51 +351,5 @@ await new Command()
       logger.info(`Total execution time: ${totalDuration}s`);
     },
   )
+  .command('list, ls', listCommand)
   .parse(Deno.args);
-
-async function findWorkspacePackages(
-  workspacePatterns: string[],
-): Promise<Array<{ packageJson: PackageJson; cwd: string }>> {
-  const cacheKey = await hashify(JSON.stringify(workspacePatterns));
-
-  // Try to get from cache
-  const cachedFiles = _cacheManager.getFileSearchCache(cacheKey);
-  if (cachedFiles) {
-    return Promise.all(
-      cachedFiles.map(async (path: string) => ({
-        packageJson: JSON.parse(await Deno.readTextFile(path)),
-        cwd: dirname(path),
-      })),
-    );
-  }
-
-  // Find all package.json files
-  const packageFileSpecs = await Promise.all(
-    workspacePatterns.map((pattern) =>
-      Array.fromAsync(
-        expandGlob(
-          pattern.endsWith('package.json')
-            ? pattern
-            : join(pattern, 'package.json'),
-          {
-            root: Deno.cwd(),
-            exclude: ['**/node_modules/**'],
-          },
-        ),
-      )
-    ),
-  ).then((results) => results.flat());
-
-  // Cache the results
-  _cacheManager.saveFileSearchCache(
-    cacheKey,
-    packageFileSpecs.map((spec) => spec.path),
-  );
-
-  return Promise.all(
-    packageFileSpecs.map(async (spec) => ({
-      packageJson: JSON.parse(await Deno.readTextFile(spec.path)),
-      cwd: dirname(spec.path),
-    })),
-  );
-}

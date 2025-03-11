@@ -1,13 +1,15 @@
 import { Graph } from './graph.ts';
-import type { PackageJson } from './graph.ts';
+import type { Project } from './graph.ts';
 import { expect } from 'jsr:@std/expect';
 
 Deno.test('Graph', async (t) => {
   await t.step('buildGraph', async (t) => {
     await t.step('should build a simple dependency tree', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-b': '^1.0.0',
@@ -15,7 +17,10 @@ Deno.test('Graph', async (t) => {
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 
@@ -31,10 +36,13 @@ Deno.test('Graph', async (t) => {
     });
 
     await t.step('should handle packages with no dependencies', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'standalone-package',
+          path: 'packages/standalone-package',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 
@@ -47,17 +55,22 @@ Deno.test('Graph', async (t) => {
     });
 
     await t.step('should handle devDependencies', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
-          devDependencies: {
+          dependencies: {
             'package-b': '^1.0.0',
           },
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 
@@ -71,9 +84,11 @@ Deno.test('Graph', async (t) => {
 
   await t.step('findCircularDependencies', async (t) => {
     await t.step('should detect circular dependencies', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-b': '^1.0.0',
@@ -81,6 +96,8 @@ Deno.test('Graph', async (t) => {
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-a': '^1.0.0',
@@ -97,9 +114,11 @@ Deno.test('Graph', async (t) => {
     });
 
     await t.step('should handle no circular dependencies', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-b': '^1.0.0',
@@ -107,7 +126,10 @@ Deno.test('Graph', async (t) => {
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 
@@ -121,13 +143,18 @@ Deno.test('Graph', async (t) => {
 
   await t.step('getTopologicalSort', async (t) => {
     await t.step('should return correct build order', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-c',
+          path: 'packages/package-c',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-b': '^1.0.0',
@@ -136,6 +163,8 @@ Deno.test('Graph', async (t) => {
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'package-c': '^1.0.0',
@@ -151,14 +180,20 @@ Deno.test('Graph', async (t) => {
     });
 
     await t.step('should handle independent packages', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 
@@ -182,9 +217,11 @@ Deno.test('Graph', async (t) => {
     });
 
     await t.step('should ignore external dependencies', async () => {
-      const packages: PackageJson[] = [
+      const packages: Project[] = [
         {
           name: 'package-a',
+          path: 'packages/package-a',
+          tasks: {},
           version: '1.0.0',
           dependencies: {
             'external-package': '^1.0.0',
@@ -193,7 +230,10 @@ Deno.test('Graph', async (t) => {
         },
         {
           name: 'package-b',
+          path: 'packages/package-b',
+          tasks: {},
           version: '1.0.0',
+          dependencies: {},
         },
       ];
 

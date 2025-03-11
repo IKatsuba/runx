@@ -1,6 +1,8 @@
 import $ from '@david/dax';
 import { join } from '@std/path';
 import { logger } from './logger.ts';
+import type { Project } from './graph.ts';
+
 export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
   try {
     // Get the merge base commit
@@ -39,12 +41,12 @@ export async function getChangedFiles(baseBranch = 'main'): Promise<string[]> {
 
 export function getAffectedPackages(
   changedFiles: string[],
-  packages: { packageJson: { name: string }; cwd: string }[],
+  packages: Project[],
 ): Set<string> {
   const affectedPackages = new Set<string>();
 
   for (const pkg of packages) {
-    const packagePath = pkg.cwd;
+    const packagePath = pkg.path;
 
     // Check if any changed file is within this package's directory
     const isAffected = changedFiles.some((file) =>
@@ -52,7 +54,7 @@ export function getAffectedPackages(
     );
 
     if (isAffected) {
-      affectedPackages.add(pkg.packageJson.name);
+      affectedPackages.add(pkg.name);
     }
   }
 

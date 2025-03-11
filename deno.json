@@ -1,23 +1,20 @@
 {
   "tasks": {
-    "e2e": {
-      "command": "deno test packages/cli-e2e/**/*.spec.ts --allow-all"
-    },
-    "test": {
-      "command": "deno test packages/cli/**/*.spec.ts --allow-all"
-    },
-    "compile": {
-      "command": "deno compile --allow-sys --allow-write --allow-read --allow-env --allow-run --output ./dist/cli packages/cli/mod.ts"
-    },
-    "install": {
-      "command": "deno install --allow-sys --allow-write --allow-read --allow-env --allow-run -g -N -R -f -n runx jsr:@runx/cli"
-    }
+    "e2e": "deno test packages/cli-e2e/**/*.spec.ts --allow-all",
+    "compile": "deno compile --allow-sys --allow-write --allow-read --allow-env --allow-run --output ./dist/cli packages/cli/mod.ts",
+    "runx": "deno run --allow-sys --allow-write --allow-read --allow-env --allow-run packages/cli/mod.ts",
+    "install": "deno install --allow-sys --allow-write --allow-read --allow-env --allow-run -g -N -R -f -n runx jsr:@runx/cli"
   },
   "workspace": [
     "./packages/*"
   ],
   "fmt": {
     "singleQuote": true
+  },
+  "test": {
+    "include": [
+      "packages/cli/**/*.spec.ts"
+    ]
   },
   "imports": {}
 }
